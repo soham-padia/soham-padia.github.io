@@ -77,8 +77,8 @@
       ]
     }
     </script>
-    <script type="module" crossorigin src="/assets/index-f7nQhj1_.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CbPi-HuW.css">
+    <script type="module" crossorigin src="/assets/index-BwP6VXhZ.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D6XjlOw3.css">
   </head>
 
   <body>
@@ -129,6 +129,18 @@
         <p>This site works best with JavaScript, but key résumé details are included here for indexing.</p>
       </div>
     </noscript>
+
+    <!-- GitHub Pages SPA: restore path from query param written by 404.html -->
+    <script>
+      (function(l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+        }
+      }(window.location));
+    </script>
 
     <!-- Vite entry -->
   </body>
