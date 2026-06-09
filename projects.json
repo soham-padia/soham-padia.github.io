@@ -1,5 +1,12 @@
 [
   {
+    "title": "Steering Arena",
+    "description": "Arcade-style research leaderboard: submit a short token sequence and the server scores how much it shifts a frozen LLM's activations along a learned 'pro-human' direction, then ranks you. The finding — opaque token-soup often beats plainly writing 'be kind' — is the research question. Built on NDIF, Supabase, and Hugging Face Spaces. Season 2 uses OLMo-3-32B.",
+    "image": "img/dark.webp",
+    "liveLink": "https://sohampadianeu-steering-arena.hf.space/",
+    "tags": ["Activation Steering", "Alignment", "Interpretability", "NNsight", "NDIF", "FastAPI"]
+  },
+  {
     "title": "Scalable ML Inference System for Real-Time Text Classification",
     "description": "Built a production-grade REST API for text classification with request validation, batching, Dockerized deployment, and Prometheus-backed p95/p99 latency monitoring.",
     "image": "img/dark.webp",
