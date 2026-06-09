@@ -1,14 +1,5 @@
 [
   {
-    "slug": "detecting-sycophancy",
-    "file": "detecting-sycophancy/post.md",
-    "title": "Can We Detect Sycophancy Before a Model Even Speaks?",
-    "date": "2026-05-19",
-    "tags": ["LLMs", "Alignment", "Mechanistic Interpretability"],
-    "epistemicStatus": "Course project with honest null-ish results and one genuinely interesting signal. We found something, but it is modest, and we are saying so clearly.",
-    "excerpt": "We adapted SYCON-Bench into a true multi-turn pressure benchmark with monotonically escalating disagreement, ran five open-weight LLMs through it, and asked whether hidden states at T0 already predict which questions a model will cave on. Zero-shot cosine similarity hits AUC 0.596–0.636. Linear probes fail entirely. The pre-flip signal is real, modest, and nonlinearly encoded. Paper submitted to EMNLP 2026."
-  },
-  {
     "slug": "scout-refiner-bottleneck",
     "file": "scout-refiner-bottleneck/post.md",
     "title": "The Scout-Refiner Bottleneck: A Negative Result with a Surprising Twist",
