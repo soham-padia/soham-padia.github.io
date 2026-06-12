@@ -1,5 +1,14 @@
 [
   {
+    "slug": "steering-arena",
+    "file": "steering-arena/post.md",
+    "title": "I built a public arena where people attack a \"pro-human\" steering direction",
+    "date": "2026-06-11",
+    "tags": ["Alignment", "Representation Engineering", "Interpretability", "LLMs"],
+    "epistemicStatus": "Small empirical writeup, $0 budget, all results public. Two hypotheses failed. Human behavior evaluation still pending.",
+    "excerpt": "I extracted a \"pro-human values\" direction from OLMo-3-32B and built a public leaderboard where people try to move the model along or against it. Token-soup beats \"be kind and honest.\" Anti-human pushes transfer across models 80% of the time; pro-human pushes transfer 33% and have negative rank correlation with Llama-70B. Both my explanations for why failed."
+  },
+  {
     "slug": "scout-refiner-bottleneck",
     "file": "scout-refiner-bottleneck/post.md",
     "title": "The Scout-Refiner Bottleneck: A Negative Result with a Surprising Twist",
