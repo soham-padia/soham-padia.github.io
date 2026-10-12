@@ -1,148 +1,1327 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soham Padia</title>
+<meta name="description" content="Soham Padia studies what happens inside language models: sycophancy, emotion directions, steering, and the token strings that move a model's internals.">
+<meta name="author" content="Soham Padia">
+<meta name="google-site-verification" content="O-MJuH93st9MnYTExJWHUyoQ02K__jCLgxWwsxoZjag">
+<meta name="theme-color" content="#122838">
+<link rel="icon" href="/img/transparent_logo.png">
+<link rel="canonical" href="https://soham-padia.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://soham-padia.github.io/">
+<meta property="og:title" content="Soham Padia">
+<meta property="og:description" content="I study what happens inside language models, and build tools that make it visible.">
+<meta property="og:image" content="https://soham-padia.github.io/img/SOHAM.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Soham Padia">
+<meta name="twitter:description" content="I study what happens inside language models, and build tools that make it visible.">
+<meta name="twitter:image" content="https://soham-padia.github.io/img/SOHAM.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Soham Padia",
+  "url": "https://soham-padia.github.io/",
+  "email": "mailto:padia.so@northeastern.edu",
+  "affiliation": { "@type": "CollegeOrUniversity", "name": "Northeastern University" },
+  "knowsAbout": ["Interpretability", "AI Safety", "Language Models", "Activation Steering"],
+  "sameAs": ["https://github.com/soham-padia", "https://www.linkedin.com/in/soham-padia/"]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#122838;
+  --ink:#F1EEE4;
+  --ink-soft:#B6C8D3;
+  --code-bg:rgba(4,12,22,.5);
+  --serif:"EB Garamond","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --left:clamp(1.5rem, 6vw, 6rem);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --paper:#0F2333; --ink:#EEECE4; --ink-soft:#AFC2CE; --code-bg:rgba(4,12,22,.55); }
+}
+:root[data-theme="dark"]{ --paper:#0F2333; --ink:#EEECE4; --ink-soft:#AFC2CE; --code-bg:rgba(4,12,22,.55); }
 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="/img/transparent_logo.png" />
+*,*::before,*::after{ box-sizing:inherit; }
+html{ background:var(--paper); scroll-padding-top:env(safe-area-inset-top,0px); scrollbar-width:none; }
+html::-webkit-scrollbar{ display:none; }
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif);
+  font-size:clamp(18px, 0.95rem + 0.35vw, 21px);
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
 
-    <title>Soham Padia – ML Engineer & Researcher (Northeastern University)</title>
-    <meta name="description" content="Soham Padia is a Master's student in AI at Northeastern University. Projects and publications in Machine Learning, NLP, Computer Vision, Reinforcement Learning, and full-stack development." />
-    <meta name="keywords" content="Soham Padia, Northeastern University, AI, Machine Learning, NLP, Computer Vision, Reinforcement Learning, PyTorch, TensorFlow, React, Tailwind, Boston" />
-    <meta name="author" content="Soham Padia" />
-    <meta name="google-site-verification" content="O-MJuH93st9MnYTExJWHUyoQ02K__jCLgxWwsxoZjag" />
-    <meta name="theme-color" content="#111827" />
+.print{ position:fixed; inset:0; width:100%; height:100%; display:block; z-index:0; pointer-events:none; }
+.print-fallback{
+  position:fixed; inset:0; z-index:0; pointer-events:none; display:none;
+  background:
+    radial-gradient(30% 40% at 72% 40%, rgba(79,125,145,.7), transparent 70%),
+    radial-gradient(30% 35% at 82% 70%, rgba(184,160,112,.6), transparent 70%),
+    linear-gradient(90deg, #0E2232, #1C3A4C);
+}
+.track{ position:relative; z-index:1; }
+.panel, .top, .index, .captions{ text-shadow:0 1px 14px rgba(4,12,22,.6), 0 0 2px rgba(4,12,22,.35); }
 
-    <!-- Canonical: use your GitHub Pages URL -->
-    <link rel="canonical" href="https://soham-padia.github.io/" />
+/* Text column, pinned like a stage */
+.panel{
+  position:fixed; z-index:2; top:0; bottom:0; left:var(--left);
+  width:min(31rem, 33vw);
+  display:grid; align-items:center;
+  padding:5.5rem 0 5.5rem;
+  pointer-events:none;
+}
+.ch{ grid-area:1 / 1; opacity:0; pointer-events:auto; }
+.ch[inert]{ pointer-events:none; }
 
-    <!-- Alternate PDF (résumé) -->
-    <link rel="alternate" type="application/pdf" href="https://soham-padia.github.io/Soham_Padia-Resume.pdf" />
+h1,h2{ font-weight:400; margin:0; text-wrap:balance; }
+h1{ font-size:clamp(3.3rem, 1.4rem + 5vw, 6.4rem); line-height:.95; letter-spacing:-.012em; margin-bottom:.5em; }
+h2{ font-size:clamp(1.9rem, 1.05rem + 2.1vw, 2.95rem); line-height:1.12; letter-spacing:-.004em; margin-bottom:.8em; }
+p{ margin:0 0 .85em; text-wrap:pretty; }
+.lede{ font-size:1.18em; line-height:1.5; }
+.small{ color:var(--ink-soft); font-size:.88em; }
+.cue{ color:var(--ink-soft); font-style:italic; margin-top:1.8em; }
+code{ font-family:var(--mono); font-size:.76em; background:var(--code-bg); padding:.3em .55em; border-radius:2px; white-space:pre-wrap; word-break:break-all; }
+.specimen{ margin:.2em 0 1em; }
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://soham-padia.github.io/" />
-    <meta property="og:title" content="Soham Padia – ML Engineer & Researcher" />
-    <meta property="og:description" content="I build ML systems that solve real problems. Research → prototype → ship. NLP · CV · RL · Full-stack." />
-    <meta property="og:image" content="https://soham-padia.github.io/img/SOHAM.png" />
+a{ color:var(--ink); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:.2em; text-decoration-color:var(--ink-soft); }
+a:hover{ text-decoration-color:var(--ink); }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; border-radius:2px; }
+.links{ display:flex; flex-wrap:wrap; gap:.35rem 1.5rem; margin-top:1.1em; }
+.contact{ list-style:none; padding:0; margin:0 0 1.2em; font-size:1.35em; line-height:1.55; }
 
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://soham-padia.github.io/" />
-    <meta name="twitter:title" content="Soham Padia – ML Engineer & Researcher" />
-    <meta name="twitter:description" content="Projects and research across NLP, CV, RL. Research → prototype → ship." />
-    <meta name="twitter:image" content="https://soham-padia.github.io/img/SOHAM.png" />
+.top{
+  position:fixed; z-index:3; top:0; left:var(--left); right:clamp(1.5rem, 4vw, 4rem);
+  padding-top:calc(env(safe-area-inset-top,0px) + 1.5rem);
+  display:flex; justify-content:space-between; align-items:baseline; gap:1rem;
+  font-size:.95em; pointer-events:none;
+}
+.top a{ pointer-events:auto; }
+.top .name{ font-style:italic; }
+.top-links{ display:flex; flex-wrap:wrap; gap:.4rem 1.5rem; }
 
-    <!-- Basic styles for visually-hidden content that remains indexable/accessible -->
-    <style>
-      .sr-only {
-        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-        overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-      }
-    </style>
+.index{
+  position:fixed; z-index:3; bottom:0; left:calc(var(--left) - .5rem);
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 1.2rem);
+  display:flex; gap:.1rem;
+}
+.index button{
+  -webkit-appearance:none;
+     -moz-appearance:none;
+          appearance:none; background:none; border:0; cursor:pointer;
+  font-family:var(--serif); font-style:italic; font-size:.98rem;
+  color:var(--ink-soft); padding:.35rem .5rem;
+  border-bottom:1px solid transparent;
+}
+.index button:hover{ color:var(--ink); }
+.index button[aria-current="true"]{ color:var(--ink); border-bottom-color:var(--ink); }
 
-    <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Person",
-      "name": "Soham Padia",
-      "jobTitle": "Machine Learning Engineer",
-      "url": "https://soham-padia.github.io/",
-      "image": "https://soham-padia.github.io/img/SOHAM.png",
-      "email": "mailto:padia.so@northeastern.edu",
-      "telephone": "+1-319-202-3067",
-      "address": { "@type": "PostalAddress", "addressLocality": "Boston", "addressRegion": "MA", "addressCountry": "US" },
-      "alumniOf": [
-        { "@type": "CollegeOrUniversity", "name": "Northeastern University" },
-        { "@type": "CollegeOrUniversity", "name": "Dwarkadas J. Sanghvi College of Engineering" }
-      ],
-      "sameAs": [
-        "https://www.linkedin.com/in/soham-padia/",
-        "https://github.com/soham-padia",
-        "https://soham-padia.github.io"
-      ],
-      "knowsAbout": [
-        "Artificial Intelligence","Machine Learning","NLP","Computer Vision","Reinforcement Learning",
-        "PyTorch","TensorFlow","Hugging Face","React","Next.js","Docker","Kubernetes","GCP","AWS"
-      ],
-      "worksFor": { "@type": "Organization", "name": "Northeastern University" },
-      "workExample": [
-        { "@type": "CreativeWork", "name": "Text to Int (PyPI package)", "url": "https://pypi.org/project/text-to-number/" },
-        { "@type": "ScholarlyArticle", "name": "NLP Techniques in Chi-Square Tests and Feature Selection", "url": "https://doi.org/10.1007/978-981-97-9855-1_10" },
-        { "@type": "ScholarlyArticle", "name": "AI-Powered Analysis & Feedback for Public Speaking", "url": "https://doi.org/10.53555/kuey.v30i5.8524" }
-      ]
-    }
-    </script>
-    <script type="module" crossorigin src="/assets/index-CIWU16UB.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DUtMvNLI.css">
-  </head>
+.captions{
+  position:fixed; z-index:2; left:var(--left);
+  bottom:calc(env(safe-area-inset-bottom,0px) + 3.6rem);
+  display:grid; justify-items:start; text-align:left; max-width:min(31rem, 33vw);
+  font-style:italic; color:var(--ink-soft); font-size:.9em;
+  pointer-events:none;
+}
+.cap{ grid-area:1 / 1; opacity:0; }
 
-  <body>
-    <div id="root"></div>
+.write-btn{
+  -webkit-appearance:none;
+     -moz-appearance:none;
+          appearance:none; cursor:pointer;
+  font-family:var(--serif); font-size:1rem; color:var(--ink);
+  background:rgba(241,238,228,.1); border:1px solid rgba(241,238,228,.55);
+  border-radius:2px; padding:.55em 1.1em;
+}
+.write-btn:hover{ background:rgba(241,238,228,.18); }
 
-    <!-- Make key content visible to no-JS crawlers (and screen readers). -->
-    <section class="sr-only" aria-label="Résumé summary for search engines">
-      <h1>Soham Himanshubhai Padia</h1>
-      <p>Email: padia.so@northeastern.edu · Phone: +1-319-202-3067 · Boston, MA</p>
-      <p>Links: https://linkedin.com/in/soham-padia · https://github.com/soham-padia · https://soham-padia.github.io</p>
+dialog.note{
+  border:0; padding:0; background:transparent; color:#1D3344;
+  width:min(34rem, calc(100vw - 2rem)); max-width:none;
+  max-height:calc(100vh - 2rem); overflow:auto; overscroll-behavior:contain;
+}
+dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+.sheet{
+  background:#F3F0E8; color:#1D3344;
+  padding:clamp(1.4rem, 4vw, 2.4rem);
+  border-radius:3px; box-shadow:0 24px 70px rgba(0,0,0,.4);
+  font-family:var(--serif); font-size:clamp(17px, 0.95rem + 0.2vw, 19px); line-height:1.55;
+}
+.sheet h2{ font-size:clamp(1.6rem, 1.1rem + 1.4vw, 2.2rem); margin:0 0 .5em; }
+.note-intro{ color:#4E6575; font-size:.95em; }
+.sheet label{ display:block; font-size:.9em; color:#4E6575; margin:1.1em 0 .35em; }
+.sheet textarea, .sheet input{
+  width:100%; font:inherit; font-size:1rem; color:#1D3344;
+  background:#FBFAF6; border:1px solid #C9C4B6; border-radius:2px;
+  padding:.6em .7em;
+}
+.sheet textarea{ resize:vertical; min-height:8em; }
+.sheet :focus-visible{ outline:2px solid #1D3344; outline-offset:2px; }
+.count{ text-align:right; font-size:.8em; color:#6B7E8A; margin-top:.3em; }
+.hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+.actions{ display:flex; align-items:center; gap:1.2rem; margin-top:1.5em; flex-wrap:wrap; }
+.send{
+  -webkit-appearance:none;
+     -moz-appearance:none;
+          appearance:none; cursor:pointer; font:inherit; font-size:1rem;
+  background:#1D3344; color:#F3F0E8; border:0; border-radius:2px; padding:.65em 1.25em;
+}
+.send:disabled{ opacity:.6; cursor:progress; }
+.ghost{ -webkit-appearance:none; -moz-appearance:none; appearance:none; cursor:pointer; font:inherit; font-size:1rem; background:none; border:0; color:#1D3344; text-decoration:underline; text-underline-offset:.2em; padding:.4em 0; }
+.status{ min-height:1.4em; margin:.9em 0 0; font-size:.92em; color:#4E6575; }
+.status.err{ color:#8A3B1E; }
 
-      <h2>Research Interests</h2>
-      <p>Artificial Intelligence, Machine Learning, Computational Biology, Biomedical AI, Scientific Computing, Algorithms.</p>
+@media (max-width: 820px){
+  body{ font-size:16.5px; }
+  .panel{ left:1.3rem; right:1.3rem; width:auto; top:51vh; bottom:5.4rem; padding:0; align-items:start; }
+  h1{ font-size:2.9rem; }
+  h2{ font-size:1.55rem; margin-bottom:.6em; }
+  .lede{ font-size:1.08em; }
+  .small, .cue{ display:none; }
+  .top{ left:1.3rem; right:1.3rem; padding-top:calc(env(safe-area-inset-top,0px) + .9rem); font-size:.88em; }
+  .top-links{ gap:.3rem 1rem; }
+  .index{ left:.8rem; }
+  .captions{ left:1.3rem; right:1.3rem; max-width:none; bottom:calc(env(safe-area-inset-bottom,0px) + 3.2rem); font-size:.82em; }
+}
+</style>
+</head>
+<body>
 
-      <h2>Education</h2>
-      <p>Master of Science in Artificial Intelligence — Northeastern University (Sep 2025–Dec 2027).</p>
-      <p>B.Tech in Information Technology — Dwarkadas J. Sanghvi College of Engineering (Jun 2021–May 2025).</p>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="mold" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.011 0.028" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap id="moldDisp" in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feGaussianBlur id="moldBlur" in="d" stdDeviation="0" result="b"/>
+    <feColorMatrix id="moldGoo" in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 12 -5" result="g"/>
+    <feComposite id="moldMix" in="SourceGraphic" in2="g" operator="arithmetic" k1="0" k2="1" k3="0" k4="0"/>
+  </filter>
+</svg>
 
-      <h2>Publications</h2>
-      <p>NLP Techniques in Chi-Square Tests and Feature Selection — DOI: 10.1007/978-981-97-9855-1_10.</p>
-      <p>Enhancing Public Speaking Skills through AI-Powered Analysis and Feedback — DOI: 10.53555/kuey.v30i5.8524.</p>
-      <p>Comparative Study of Reinforcement Learning Models for Blockchain Security — in progress.</p>
+<canvas class="print" id="print" aria-hidden="true"></canvas>
+<div class="print-fallback" id="fallback" aria-hidden="true"></div>
 
-      <h2>Patent</h2>
-      <p>System and Method to Distribute Dividend Towards an Investment Secured for Implementing an Action Plan — Indian Application 202221050908 (Journal 10/2024).</p>
+<header class="top">
+  <span class="name" id="topName" style="opacity:0">Soham Padia</span>
+  <span class="top-links">
+    <a href="/blog">Notes</a>
+    <a href="mailto:padia.so@northeastern.edu">Email</a>
+    <a href="https://github.com/soham-padia">GitHub</a>
+    <a href="https://linkedin.com/in/soham-padia">LinkedIn</a>
+  </span>
+</header>
 
-      <h2>Projects</h2>
-      <p>Text to Int (PyPI) — 4,000+ downloads; linear-time text-to-number normalizer. https://pypi.org/project/text-to-number/</p>
-      <p>Siamese Neural Networks — precision/recall &gt; 0.99 for similarity detection.</p>
-      <p>Text Summarizer — Transformers + NLTK for large-text condensation.</p>
-      <p>Overleaf Template Contribution — customizable SOP/PS template improvements.</p>
+<main class="panel" id="panel">
+  <section class="ch" data-i="0" aria-label="Introduction">
+    <h1>Soham Padia</h1>
+    <p class="lede">I study what happens inside language models, and build tools that make it visible.</p>
+    <p class="small">MS in Artificial Intelligence at Northeastern University, Boston. Interpretability and AI safety.</p>
+    <p class="cue">Keep scrolling. The print changes as you go.</p>
+  </section>
 
-      <h2>Experience</h2>
-      <p>EdYou Abroad — Full-Stack Developer Intern. Built React + Supabase site, managed client requirements.</p>
+  <section class="ch" data-i="1" aria-label="Sycophancy">
+    <h2>A model told me what it thought I wanted to hear.</h2>
+    <p>Across six turns of escalating pressure and about 2,300 conversations, five open-weight models gave in between 41 and 98 percent of the time.</p>
+    <p>Their activations held a mild but real linear signal. Nonlinear probes did 6.6 points better, and no probe transferred from one model to another.</p>
+    <p class="small">Joint first author on a paper under review. Advised by Prof. Malihe Alikhani.</p>
+  </section>
 
-      <h2>Technical Skills</h2>
-      <p>Programming: C, C++, Python, Rust, Go, Java, SQL, TypeScript, JavaScript, Bash, HTML, CSS, LaTeX.</p>
-      <p>AI/ML: PyTorch, TensorFlow, Hugging Face, NLTK, OpenCV; NLP, CV, LLMs.</p>
-      <p>Tools: Git/GitHub, Linux, Docker, Kubernetes, GCP, AWS, Jupyter, React, Next.js.</p>
-      <p>IoT/Embedded: Raspberry Pi 5, Pico, Arduino; DIY drone prototyping.</p>
-      <p>Math: Linear Algebra, Probability, Optimization, Numerical Methods, Algorithms, Graphs.</p>
-    </section>
+  <section class="ch" data-i="2" aria-label="Emotion directions">
+    <h2>So I started reading the activations instead.</h2>
+    <p>With Dr. Natalie Shapira at the Bau Lab, I isolate directions for emotional events, trauma above all, in four open-weight models from 24B to 72B parameters, then steer and ablate them layer by layer.</p>
+    <p>The models disagree in strange ways when an event is injected into the activations rather than written into the prompt. Finding out why is the current project.</p>
+  </section>
 
-    <!-- Also provide a <noscript> block (for crawlers that only read raw HTML). -->
-    <noscript>
-      <div>
-        <p><strong>Résumé PDF:</strong> <a href="https://soham-padia.github.io/Soham_Padia-Resume.pdf">Download</a></p>
-        <p>This site works best with JavaScript, but key résumé details are included here for indexing.</p>
+  <section class="ch" data-i="3" aria-label="Steering Arena">
+    <h2>Then I handed my measurement to strangers.</h2>
+    <p>Steering Arena scores text by how far it moves Olmo 3-32B along a prosocial direction. After about 600 submissions, the top 36 were unreadable token strings.</p>
+    <p class="specimen"><code>Undert! AH :-) Rog Appl)</code></p>
+    <p>The best plain-English entry came 37th.</p>
+    <div class="links">
+      <a href="https://sohampadianeu-steering-arena.hf.space/">Play Steering Arena</a>
+      <a href="/blog/steering-arena">Read my write-up</a>
+      <a href="https://allenai.org/blog/olmo-arena">Read Ai2's write-up</a>
+    </div>
+  </section>
+
+  <section class="ch" data-i="4" aria-label="whisperers">
+    <h2>The gibberish turned out to be the interesting part.</h2>
+    <p>whisperers finds those strings on purpose. Give it a direction, attention heads, an SAE latent, a LoRA or a function vector, and it searches for a short prefix that pushes the model toward it.</p>
+    <p class="specimen"><code>pip install whisperers</code></p>
+    <div class="links">
+      <a href="https://pypi.org/project/whisperers/">View on PyPI</a>
+      <a href="https://sohampadianeu-whisperers-dict.static.hf.space/index.html">Browse the prefixes it found</a>
+    </div>
+  </section>
+
+  <section class="ch" data-i="5" aria-label="NU AI Safety">
+    <h2>None of this should be done alone.</h2>
+    <p>I co-founded Northeastern University AI Safety. We run intro fellowships, host researchers and support student research, open to every major with no prerequisites.</p>
+    <div class="links">
+      <a href="https://nuaisafety.com">Visit nuaisafety.com</a>
+    </div>
+  </section>
+
+  <section class="ch" data-i="6" aria-label="Contact">
+    <h2>Write to me.</h2>
+    <ul class="contact">
+      <li><a href="mailto:padia.so@northeastern.edu">padia.so@northeastern.edu</a></li>
+      <li><a href="https://github.com/soham-padia">GitHub</a></li>
+      <li><a href="https://linkedin.com/in/soham-padia">LinkedIn</a></li>
+    </ul>
+    <p>Or say something without saying who you are.</p>
+    <button type="button" class="write-btn" id="openNote">Write to me anonymously</button>
+    <p class="small" style="margin-top:1.6em">Keep scrolling and the print starts over.</p>
+  </section>
+</main>
+
+<div class="captions" aria-hidden="true">
+  <span class="cap" data-i="0">Plate I. A neuron, or a pressed specimen.</span>
+  <span class="cap" data-i="1">Plate II. A sunflower, and a pond that tells it what it wants to hear.</span>
+  <span class="cap" data-i="2">Plate III. Faint paths, and one strong direction.</span>
+  <span class="cap" data-i="3">Plate IV. A measuring dial, being steered.</span>
+  <span class="cap" data-i="4">Plate V. A whisper, coming apart into tokens.</span>
+  <span class="cap" data-i="5">Plate VI. A lantern, and the lights around it.</span>
+  <span class="cap" data-i="6">Plate VII. A dumb pirate cat.</span>
+</div>
+
+<nav class="index" aria-label="Plates">
+  <button type="button" data-go="0" aria-label="Plate I, introduction">I</button>
+  <button type="button" data-go="1" aria-label="Plate II, sycophancy">II</button>
+  <button type="button" data-go="2" aria-label="Plate III, emotion directions">III</button>
+  <button type="button" data-go="3" aria-label="Plate IV, Steering Arena">IV</button>
+  <button type="button" data-go="4" aria-label="Plate V, whisperers">V</button>
+  <button type="button" data-go="5" aria-label="Plate VI, NU AI Safety">VI</button>
+  <button type="button" data-go="6" aria-label="Plate VII, contact">VII</button>
+</nav>
+
+<div class="track" id="track" aria-hidden="true"></div>
+
+<dialog class="note" id="noteDialog" aria-labelledby="noteTitle">
+  <div class="sheet">
+    <form id="noteForm" novalidate>
+      <h2 id="noteTitle">An anonymous note</h2>
+      <p class="note-intro">No sign-in and no name needed. If you'd like a reply, leave a way to reach you; otherwise leave it blank.</p>
+      <label for="noteBody">Your message</label>
+      <textarea id="noteBody" name="body" rows="6" maxlength="4000" required></textarea>
+      <div class="count" id="noteCount" aria-live="polite">0 / 4000</div>
+      <label for="noteReply">How to reply to you (optional)</label>
+      <input id="noteReply" name="reply_to" type="text" maxlength="200" autocomplete="off">
+      <div class="hp" aria-hidden="true">
+        <label for="noteSite">Leave this empty</label>
+        <input id="noteSite" name="website" type="text" tabindex="-1" autocomplete="off">
       </div>
-    </noscript>
+      <div class="actions">
+        <button type="submit" class="send" id="noteSend">Send anonymously</button>
+        <button type="button" class="ghost" id="noteCancel">Cancel</button>
+      </div>
+      <p class="status" id="noteStatus" role="status" aria-live="polite"></p>
+    </form>
+    <div class="sent" id="noteSent" hidden>
+      <h2>Sent.</h2>
+      <p>Thank you for writing.</p>
+      <div class="actions"><button type="button" class="send" id="noteClose">Close</button></div>
+    </div>
+  </div>
+</dialog>
 
-    <!-- GitHub Pages SPA: restore path from query param written by 404.html -->
-    <script>
-      (function(l) {
-        if (l.search[1] === '/') {
-          var decoded = l.search.slice(1).split('&').map(function(s) {
-            return s.replace(/~and~/g, '&');
-          }).join('?');
-          window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
-        }
-      }(window.location));
-    </script>
+<script>
+(function(){
+  const N = 7;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const track = document.getElementById('track');
+  const chapters = [...document.querySelectorAll('.ch')];
+  const caps = {}; document.querySelectorAll('.cap').forEach(c => { caps[c.dataset.i] = c; });
+  const buttons = [...document.querySelectorAll('.index button')];
+  const topName = document.getElementById('topName');
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
-    <!-- Vite entry -->
-  </body>
+  let seg = 1, P = 1, lastW = 0, lastH = 0;
+  let target = 0, disp = 0;
+
+  const wrapN = x => ((x % N) + N) % N;
+  const sm = a => a * a * (3 - 2 * a);
+
+  function layout(force){
+    const w = window.innerWidth, h = window.innerHeight;
+    if (!force && w === lastW && Math.abs(h - lastH) < 160) return;
+    const prog = seg > 1 ? wrapN(window.scrollY / seg) : 0;
+    lastW = w; lastH = h;
+    seg = Math.max(520, h * 1.5);
+    P = N * seg;
+    track.style.height = (3 * P + h) + 'px';
+    window.scrollTo(0, P + prog * seg);
+    target = disp = prog;
+  }
+
+  function onScroll(){
+    let y = window.scrollY;
+    if (y < 0.5 * P) { window.scrollTo(0, y + P); return; }
+    if (y >= 2.5 * P) { window.scrollTo(0, y - P); return; }
+    target = wrapN(y / seg);
+  }
+
+  const moldDisp = document.getElementById('moldDisp');
+  const moldBlur = document.getElementById('moldBlur');
+  const moldMix = document.getElementById('moldMix');
+  const moldGoo = document.getElementById('moldGoo');
+  const panel = document.getElementById('panel');
+  let molding = false, lastM = -1;
+
+  function setMold(m){
+    if (reduce.matches) m = 0;
+    if (m < 0.004){
+      if (molding){ panel.style.filter = ''; molding = false; }
+      return;
+    }
+    if (Math.abs(m - lastM) > 0.002){
+      const g = sm(Math.min(1, m / 0.25));
+      // Blur spreads the letters into wet strokes; the threshold drops as they spread,
+      // so the ink keeps its mass and never washes away.
+      const thresh = 0.42 - 0.34 * m, slope = 12;
+      moldDisp.setAttribute('scale', (24 * m).toFixed(2));
+      moldBlur.setAttribute('stdDeviation', (0.4 + 3.4 * m).toFixed(2));
+      moldGoo.setAttribute('values', `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${slope} ${(-slope * thresh).toFixed(3)}`);
+      moldMix.setAttribute('k2', (1 - g).toFixed(3));
+      moldMix.setAttribute('k3', g.toFixed(3));
+      lastM = m;
+    }
+    if (!molding){ panel.style.filter = 'url(#mold)'; molding = true; }
+  }
+
+  function updateText(){
+    const fi = Math.floor(disp), fr = disp - fi;
+    const k = fr <= 0.55 ? 0 : sm(Math.min(1, (fr - 0.55) / 0.45));
+    const cur = wrapN(fi), nxt = wrapN(fi + 1);
+    const still = reduce.matches;
+    chapters.forEach((el, i) => {
+      let a = 0;
+      if (i === cur) a = still ? (k < 0.5 ? 1 : 0) : 1 - k;
+      if (i === nxt) a = still ? (k < 0.5 ? 0 : 1) : Math.max(a, k);
+      el.style.opacity = a.toFixed(3);
+      el.style.transform = 'none';
+      const on = a > 0.5;
+      if (on && el.inert) { el.inert = false; el.removeAttribute('aria-hidden'); }
+      if (!on && !el.inert) { el.inert = true; el.setAttribute('aria-hidden', 'true'); }
+      if (caps[i]) caps[i].style.opacity = a.toFixed(3);
+      if (i === 0) topName.style.opacity = (1 - a).toFixed(3);
+    });
+    setMold(Math.sin(Math.PI * k));
+    const active = String(k < 0.5 ? cur : nxt);
+    buttons.forEach(b => b.setAttribute('aria-current', b.dataset.go === active ? 'true' : 'false'));
+  }
+
+  function go(i){
+    const cur = window.scrollY / seg;
+    const base = Math.floor(cur / N) * N;
+    let best = null;
+    for (const c of [base - N + i, base + i, base + N + i]) {
+      if (c < 0.5 * N || c >= 2.5 * N) continue;
+      if (best === null || Math.abs(c - cur) < Math.abs(best - cur)) best = c;
+    }
+    if (best !== null) window.scrollTo({ top: best * seg, behavior: reduce.matches ? 'auto' : 'smooth' });
+  }
+  buttons.forEach(b => b.addEventListener('click', () => go(+b.dataset.go)));
+
+  // ---------- Anonymous notes ----------
+  // Where anonymous notes go. Pick one provider and fill in its key.
+  //  web3forms: paste the access key Web3Forms emails you (it is meant to be public).
+  //  supabase:  project URL + publishable key (sb_publishable_...), never the secret key.
+  const NOTES = {
+    provider: 'web3forms',
+    web3formsKey: '6b90eb3b-a292-469f-ad4f-1957a1cd5413',
+    supabaseUrl: '', supabaseKey: '', table: 'anonymous_messages'
+  };
+  const notesReady = () => NOTES.provider === 'web3forms' ? !!NOTES.web3formsKey : !!(NOTES.supabaseUrl && NOTES.supabaseKey);
+  function sendNote(body, reply){
+    if (NOTES.provider === 'web3forms'){
+      const payload = { access_key: NOTES.web3formsKey, subject: 'Anonymous note from your site', from_name: 'Anonymous', message: body, botcheck: '' };
+      if (reply) payload['How to reply'] = reply;
+      return fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json().catch(() => ({})).then(j => { if (!r.ok || j.success === false) throw new Error('HTTP ' + r.status); }));
+    }
+    return fetch(NOTES.supabaseUrl.replace(/\/$/, '') + '/rest/v1/' + NOTES.table, {
+      method: 'POST',
+      headers: Object.assign(
+        { 'apikey': NOTES.supabaseKey, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        NOTES.supabaseKey.startsWith('eyJ') ? { 'Authorization': 'Bearer ' + NOTES.supabaseKey } : {}
+      ),
+      body: JSON.stringify({ body, reply_to: reply || null })
+    }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); });
+  }
+
+  const dlg = document.getElementById('noteDialog');
+  const form = document.getElementById('noteForm');
+  const bodyEl = document.getElementById('noteBody');
+  const replyEl = document.getElementById('noteReply');
+  const siteEl = document.getElementById('noteSite');
+  const sendBtn = document.getElementById('noteSend');
+  const statusEl = document.getElementById('noteStatus');
+  const sentEl = document.getElementById('noteSent');
+  const countEl = document.getElementById('noteCount');
+  let openedAt = 0, lastSent = 0;
+
+  function setStatus(msg, isErr){ statusEl.textContent = msg; statusEl.classList.toggle('err', !!isErr); }
+  function openNote(){
+    form.hidden = false; sentEl.hidden = true; setStatus('');
+    openedAt = Date.now();
+    document.documentElement.style.overflow = 'hidden';
+    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+    bodyEl.focus();
+  }
+  function closeNote(){ if (dlg.open) dlg.close(); }
+  dlg.addEventListener('close', () => { document.documentElement.style.overflow = ''; document.getElementById('openNote').focus(); });
+  dlg.addEventListener('click', e => { if (e.target === dlg) closeNote(); });
+  document.getElementById('openNote').addEventListener('click', openNote);
+  document.getElementById('noteCancel').addEventListener('click', closeNote);
+  document.getElementById('noteClose').addEventListener('click', closeNote);
+  bodyEl.addEventListener('input', () => { countEl.textContent = bodyEl.value.length + ' / 4000'; });
+
+  function showSent(){
+    form.reset(); countEl.textContent = '0 / 4000';
+    form.hidden = true; sentEl.hidden = false;
+    document.getElementById('noteClose').focus();
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const body = bodyEl.value.trim();
+    const reply = replyEl.value.trim();
+    if (!body){ setStatus('Write a message first.', true); bodyEl.focus(); return; }
+    if (siteEl.value || Date.now() - openedAt < 2500){ showSent(); return; }
+    if (Date.now() - lastSent < 30000){ setStatus('You just sent a note. Wait half a minute before sending another.', true); return; }
+    if (!notesReady()){
+      setStatus('Anonymous notes aren\'t connected on this copy of the page yet. You can email padia.so@northeastern.edu instead.', true);
+      return;
+    }
+    sendBtn.disabled = true; sendBtn.textContent = 'Sending…'; setStatus('');
+    try {
+      await sendNote(body, reply);
+      lastSent = Date.now();
+      showSent();
+    } catch (err) {
+      setStatus('The note didn\'t send. Check your connection and try again, or email padia.so@northeastern.edu.', true);
+    } finally {
+      sendBtn.disabled = false; sendBtn.textContent = 'Send anonymously';
+    }
+  });
+
+  // ---------- The print ----------
+  const canvas = document.getElementById('print');
+  const gl = canvas.getContext('webgl', { antialias:false, alpha:false, premultipliedAlpha:false });
+
+  const FRAG = `
+precision highp float;
+uniform vec2 uRes; uniform float uTime; uniform float uProg;
+uniform vec2 uCenter; uniform vec2 uRad; uniform float uScale; uniform vec3 uPaper; uniform float uMode;
+uniform sampler2D uWhisper;
+vec2 whUV(vec2 p){ return (p + vec2(0.36, -0.02)) * 0.38 + 0.5; }
+
+float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float noise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0-2.0*f);
+  return mix(mix(hash(i), hash(i+vec2(1.0,0.0)), u.x), mix(hash(i+vec2(0.0,1.0)), hash(i+vec2(1.0,1.0)), u.x), u.y); }
+float fbm(vec2 p){ float v = 0.0, a = 0.5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+  for (int i = 0; i < 5; i++){ v += a * noise(p); p = m * p; a *= 0.5; } return v; }
+mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+float sdBox(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+float sdSeg(vec2 p, vec2 a, vec2 b, float r){ vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0); return length(pa - ba*h) - r; }
+float sdLeaf(vec2 p, vec2 a, vec2 b, float w){ vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0);
+  return length(pa - ba*h) - w * sin(3.14159 * pow(h, 0.8)); }
+float sdLeafC(vec2 p, vec2 a, vec2 b, float w, float bend){ vec2 ba = b - a; vec2 n = normalize(vec2(-ba.y, ba.x));
+  float h = clamp(dot(p - a, ba)/dot(ba, ba), 0.0, 1.0); p -= n * bend * sin(3.14159 * h); return sdLeaf(p, a, b, w); }
+float sdTri(vec2 p, float r){ const float k = 1.7320508; p.x = abs(p.x) - r; p.y = p.y + r / k;
+  if (p.x + k*p.y > 0.0) p = vec2(p.x - k*p.y, -k*p.x - p.y) / 2.0; p.x -= clamp(p.x, -2.0*r, 0.0); return -length(p) * sign(p.y); }
+
+float smin(float a, float b, float k){ float h = clamp(0.5 + 0.5*(b - a)/k, 0.0, 1.0); return mix(b, a, h) - k*h*(1.0 - h); }
+float sdEll(vec2 p, vec2 r){ float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0 - 1.0)/max(k1, 1e-4); }
+float sdTaper(vec2 p, vec2 a, vec2 b, float ra, float rb){ vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0); return length(pa - ba*h) - mix(ra, rb, h); }
+
+float sdTaperC(vec2 p, vec2 a, vec2 b, float ra, float rb, float bend){
+  vec2 ba = b - a; vec2 n = normalize(vec2(-ba.y, ba.x));
+  float h = clamp(dot(p - a, ba)/dot(ba, ba), 0.0, 1.0);
+  p -= n * bend * sin(3.14159 * h);
+  return sdTaper(p, a, b, ra, rb);
+}
+
+// I. A specimen: neuron or pressed plant, it could be either
+float sSpecimen(vec2 p){
+  vec2 c = vec2(0.0, 0.02);
+  float d = sdEll(p - c, vec2(0.13, 0.115));
+  d = smin(d, sdTaperC(p, c, vec2(-0.55,0.55), 0.045, 0.012, 0.08), 0.05);
+  d = smin(d, sdTaperC(p, c, vec2(-0.15,0.86), 0.045, 0.012, -0.06), 0.05);
+  d = smin(d, sdTaperC(p, c, vec2(0.3,0.8), 0.04, 0.011, 0.07), 0.05);
+  d = smin(d, sdTaperC(p, c, vec2(0.62,0.42), 0.04, 0.011, -0.06), 0.05);
+  d = min(d, sdTaperC(p, vec2(-0.33,0.33), vec2(-0.72,0.3), 0.018, 0.005, 0.03));
+  d = min(d, sdTaperC(p, vec2(-0.45,0.47), vec2(-0.47,0.78), 0.014, 0.004, -0.03));
+  d = min(d, sdTaperC(p, vec2(-0.1,0.52), vec2(-0.38,0.86), 0.016, 0.005, 0.03));
+  d = min(d, sdTaperC(p, vec2(-0.13,0.7), vec2(0.04,0.96), 0.012, 0.004, -0.02));
+  d = min(d, sdTaperC(p, vec2(0.19,0.52), vec2(0.5,0.92), 0.015, 0.005, -0.03));
+  d = min(d, sdTaperC(p, vec2(0.4,0.3), vec2(0.74,0.16), 0.015, 0.005, 0.03));
+  d = min(d, sdTaperC(p, vec2(0.5,0.37), vec2(0.62,0.68), 0.013, 0.004, -0.02));
+  d = min(d, sdLeaf(p, vec2(-0.72,0.3), vec2(-0.84,0.36), 0.022));
+  d = min(d, sdLeaf(p, vec2(0.62,0.68), vec2(0.66,0.8), 0.02));
+  d = min(d, sdLeaf(p, vec2(-0.38,0.86), vec2(-0.46,0.95), 0.018));
+  d = min(d, length(p - vec2(0.04,0.96)) - 0.022);
+  d = min(d, length(p - vec2(0.5,0.92)) - 0.02);
+  d = min(d, length(p - vec2(-0.47,0.78)) - 0.018);
+  d = min(d, length(p - vec2(0.74,0.16)) - 0.02);
+  d = smin(d, sdTaperC(p, c - vec2(0.0,0.08), vec2(0.05,-0.75), 0.032, 0.016, 0.06), 0.04);
+  d = min(d, sdEll(p - vec2(0.06,-0.25), vec2(0.034,0.065)));
+  d = min(d, sdEll(p - vec2(0.085,-0.41), vec2(0.034,0.065)));
+  d = min(d, sdEll(p - vec2(0.081,-0.57), vec2(0.032,0.06)));
+  d = min(d, sdTaperC(p, vec2(0.05,-0.75), vec2(-0.26,-0.96), 0.014, 0.004, 0.05));
+  d = min(d, sdTaperC(p, vec2(0.05,-0.75), vec2(0.1,-1.02), 0.014, 0.004, -0.03));
+  d = min(d, sdTaperC(p, vec2(0.05,-0.75), vec2(0.36,-0.92), 0.014, 0.004, -0.04));
+  d = min(d, length(p - vec2(-0.26,-0.96)) - 0.02);
+  d = min(d, length(p - vec2(0.1,-1.02)) - 0.02);
+  d = min(d, length(p - vec2(0.36,-0.92)) - 0.02);
+  d = max(d, -(length(p - c) - 0.045));
+  return d;
+}
+
+float sPond(vec2 p){
+  p -= vec2(0.0, 0.12);
+  float d = sdBox(p - vec2(0.0,-0.02), vec2(0.95,0.007), 0.0);
+  // the flower as it is: tired, head hanging
+  d = min(d, sdSeg(p, vec2(-0.05,-0.02), vec2(0.0,0.52), 0.022));
+  d = min(d, sdSeg(p, vec2(0.0,0.52), vec2(0.12,0.6), 0.02));
+  d = min(d, sdSeg(p, vec2(0.12,0.6), vec2(0.22,0.52), 0.018));
+  d = min(d, sdLeafC(p, vec2(-0.02,0.24), vec2(-0.26,0.04), 0.055, -0.04));
+  vec2 hq = rot(-0.5) * (p - vec2(0.25,0.42)); hq.y *= 1.6;
+  float head = length(hq) - 0.09;
+  for (int i = 0; i < 7; i++){ float fi = float(i);
+    float a = -2.6 + fi*0.33 + 0.07*sin(fi*3.1); vec2 dir = vec2(cos(a), sin(a));
+    head = min(head, sdLeaf(hq, dir*0.07, dir*(0.2 + 0.03*sin(fi*1.7)), 0.035)); }
+  d = min(d, head / 1.6);
+  // the flower as the pond tells it
+  if (p.y < -0.03){
+    vec2 q = vec2(p.x + 0.018*sin(p.y*40.0 + uTime*1.1), -p.y);
+    float depth = smoothstep(0.0, 0.5, q.y);
+    q += vec2(sin(q.y*7.0 + 2.0*sin(q.x*5.0) + uTime*0.15), cos(q.x*6.0 + 2.0*sin(q.y*4.0))) * 0.035 * depth;
+    float r = sdSeg(q, vec2(-0.02,0.03), vec2(0.0,0.5), 0.024);
+    r = min(r, sdLeafC(q, vec2(0.0,0.22), vec2(-0.3,0.36), 0.065, 0.03));
+    r = min(r, sdLeafC(q, vec2(0.0,0.3), vec2(0.28,0.44), 0.06, -0.03));
+    vec2 rc = q - vec2(0.0, 0.66);
+    float fh = length(rc) - 0.14;
+    for (int i = 0; i < 16; i++){ float a = float(i)*0.3927; vec2 dir = vec2(cos(a), sin(a));
+      fh = min(fh, sdLeaf(rc, dir*0.11, dir*0.33, 0.048)); }
+    r = min(r, fh);
+    r = max(r, -(length(rc) - 0.07));
+    d = min(d, r);
+  }
+  d = min(d, sdBox(p - vec2(-0.6,-0.24), vec2(0.12,0.006), 0.0));
+  d = min(d, sdBox(p - vec2(0.58,-0.4), vec2(0.15,0.006), 0.0));
+  d = min(d, sdBox(p - vec2(-0.45,-0.66), vec2(0.1,0.006), 0.0));
+  return d;
+}
+
+// III. One strong direction through a field of faint ones
+float sField(vec2 p){
+  vec2 A = vec2(-0.85,-0.62), B = vec2(0.82,0.6);
+  float d = sdTaperC(p, A, B, 0.02, 0.03, 0.14);
+  vec2 dir = normalize(B - A); vec2 n = vec2(-dir.y, dir.x);
+  d = min(d, sdSeg(p, B, B - dir*0.17 + n*0.09, 0.022));
+  d = min(d, sdSeg(p, B, B - dir*0.17 - n*0.09, 0.022));
+  for (int i = 0; i < 3; i++){ float t = 0.25 + float(i)*0.25;
+    vec2 pt = mix(A, B, t) + n * 0.14 * sin(3.14159*t);
+    d = min(d, length(p - pt) - 0.04); }
+  return d;
+}
+float fField(vec2 p){
+  float d = 1e3;
+  for (int i = 0; i < 11; i++){ float fi = float(i);
+    float a = 0.62 + (hash(vec2(fi, 1.7)) - 0.5) * 0.9;
+    vec2 q = rot(a) * p;
+    float y = q.y - (-1.0 + fi*0.2) - 0.07*sin(q.x*2.6 + fi*1.3);
+    float ld = abs(y)*0.85 - 0.004;
+    float dash = abs(fract(q.x*2.0 + fi*0.37) - 0.5);
+    ld = max(ld, (dash - 0.38) * 0.3);
+    d = min(d, ld); }
+  vec2 g = p * 6.0; vec2 gi = floor(g);
+  vec2 gf = fract(g) - 0.5 - (vec2(hash(gi), hash(gi + 7.1)) - 0.5) * 0.6;
+  d = min(d, length(gf)/6.0 - 0.007);
+  return d;
+}
+
+// IV. A measuring instrument, being steered
+float sInstrument(vec2 p){
+  float r = length(p);
+  vec2 ang = p / max(r, 1e-4);
+  float d = abs(r - 0.8) - 0.05 * smoothstep(0.3, 0.62, fbm(ang*1.6 + 3.0));
+  for (int i = 0; i < 12; i++){ float fi = float(i); float ta = 0.35 + fi*0.2;
+    vec2 u = vec2(cos(ta), sin(ta));
+    float len = mod(fi, 4.0) < 0.5 ? 0.6 : 0.68;
+    d = min(d, sdSeg(p, u*len, u*0.74, 0.008)); }
+  vec2 nq = rot(0.35 + 0.12*sin(uTime*0.5)) * p;
+  d = min(d, sdLeaf(nq, vec2(0.0,-0.56), vec2(0.0,0.58), 0.09));
+  for (int i = 0; i < 7; i++){ float fi = float(i);
+    float a = fi*0.9 + 0.3 + hash(vec2(fi, 3.3))*0.4;
+    vec2 c = (0.93 + hash(vec2(fi, 8.1))*0.15) * vec2(cos(a), sin(a));
+    d = min(d, sdBox(rot(hash(vec2(fi, 5.5))*3.0) * (p - c), vec2(0.045, 0.03), 0.004)); }
+  return d;
+}
+float fInstrument(vec2 p){
+  float r = length(p);
+  float a = atan(p.y, p.x);
+  float streak = 0.4 + 0.6*noise(vec2(a*14.0, r*30.0));
+  float t1 = max(abs(r - 0.47) - 0.06*streak, (abs(a - 1.37) - 0.55) * r);
+  float t2 = max(abs(r - 0.47) - 0.06*streak, (abs(a + 1.77) - 0.55) * r);
+  float d = min(t1, t2);
+  for (int i = 0; i < 12; i++){ float fi = float(i);
+    float aa = fi*0.53 + hash(vec2(fi, 1.1))*0.5;
+    vec2 c = (0.9 + hash(vec2(fi, 2.2))*0.3) * vec2(cos(aa), sin(aa));
+    d = min(d, sdBox(rot(hash(vec2(fi, 4.4))*3.0) * (p - c), vec2(0.022, 0.016), 0.003)); }
+  return d;
+}
+
+// V. Mouth near an ear; the words come apart on the way
+float sWhisper(vec2 p){
+  float w = sdEll(p - vec2(-1.0,0.25), vec2(0.75,0.95));
+  w = smin(w, sdEll(rot(0.6) * (p - vec2(-0.2,0.33)), vec2(0.1,0.045)), 0.04);
+  w = smin(w, sdEll(p - vec2(-0.245,0.17), vec2(0.045,0.032)), 0.03);
+  w = smin(w, sdEll(p - vec2(-0.255,0.09), vec2(0.042,0.032)), 0.03);
+  w = smin(w, sdEll(p - vec2(-0.3,-0.04), vec2(0.08,0.07)), 0.05);
+  w = max(w, -sdSeg(p, vec2(-0.32,0.132), vec2(-0.215,0.128), 0.006));
+  float l = sdEll(p - vec2(1.05,0.15), vec2(0.72,0.95));
+  vec2 e = p - vec2(0.55, 0.2);
+  float helix = max(abs(sdEll(e, vec2(0.11, 0.18))) - 0.016, e.x - 0.035);
+  helix = min(helix, sdSeg(e, vec2(0.03, 0.168), vec2(0.075, 0.12), 0.014));
+  helix = min(helix, sdSeg(e, vec2(0.03, -0.17), vec2(0.06, -0.12), 0.013));
+  float anti = max(abs(sdEll(e - vec2(0.02, 0.0), vec2(0.055, 0.1))) - 0.01, max(e.x - 0.025, -e.y - 0.06));
+  float tragus = sdSeg(e, vec2(0.085, 0.01), vec2(0.07, -0.05), 0.012);
+  l = max(l, -min(min(helix, anti), tragus));
+  float d = min(w, l);
+  // only fragments of the two faces: whatever is near the mouth and the ear
+  vec2 mid = p - vec2(0.12, 0.17);
+  d = max(d, length(mid * vec2(1.0, 1.2)) - 0.7 - 0.12*(fbm(p*3.0 + 2.0) - 0.5));
+  for (int i = 0; i < 6; i++){ float fi = float(i); float t = fi/13.0;
+    vec2 c = mix(vec2(-0.17,0.12), vec2(0.42,0.22), t) + vec2(0.0, 0.14*sin(3.14159*t));
+    c += (vec2(hash(vec2(fi,2.0)), hash(vec2(fi,5.0))) - 0.5) * 0.05;
+    vec2 q = rot((hash(vec2(fi,9.0)) - 0.5) * (0.3 + t*2.0)) * (p - c);
+    d = min(d, sdBox(q, vec2(0.012 + 0.016*hash(vec2(fi,4.0)), 0.022), 0.003)); }
+  return d;
+}
+float fWhisper(vec2 p){
+  float d = 1e3;
+  for (int i = 6; i < 22; i++){ float fi = float(i); float t = fi/13.0; float tc = min(t, 1.0);
+    vec2 c = mix(vec2(-0.17,0.12), vec2(0.42,0.22), tc) + vec2(0.0, 0.14*sin(3.14159*tc));
+    c += vec2(-0.3, 0.9) * max(t - 0.8, 0.0);
+    c += (vec2(hash(vec2(fi,2.0)), hash(vec2(fi,5.0))) - 0.5) * (0.05 + t*0.22);
+    vec2 q = rot((hash(vec2(fi,9.0)) - 0.5) * (0.6 + t*3.0)) * (p - c);
+    d = min(d, sdBox(q, vec2(0.01 + 0.014*hash(vec2(fi,4.0)), 0.02), 0.003)); }
+  return d;
+}
+
+float sLantern(vec2 p){
+  float d = sdBox(p - vec2(0.0,0.56), vec2(0.3,0.03), 0.02);
+  float frame = abs(sdBox(p, vec2(0.27,0.5), 0.06)) - 0.026 * smoothstep(0.42, 0.64, fbm(p*2.6 + 5.0));
+  d = min(d, frame);
+  d = min(d, sdLeaf(p, vec2(0.0,-0.22), vec2(0.0,0.28), 0.11));
+  d = min(d, sdBox(p - vec2(0.0,-0.55), vec2(0.33,0.045), 0.02));
+  // other people's lights, smaller, nearby
+  d = min(d, sdLeaf(p, vec2(-0.74,-0.66), vec2(-0.74,-0.54), 0.032));
+  d = min(d, sdLeaf(p, vec2(-0.42,-0.9), vec2(-0.42,-0.79), 0.028));
+  d = min(d, sdLeaf(p, vec2(0.42,-0.9), vec2(0.42,-0.79), 0.028));
+  d = min(d, sdLeaf(p, vec2(0.74,-0.66), vec2(0.74,-0.54), 0.032));
+  return d;
+}
+float sCat(vec2 p){
+  float d = smin(sdEll(p - vec2(0.0,-0.38), vec2(0.34,0.4)), sdEll(p - vec2(0.0,0.2), vec2(0.3,0.25)), 0.1);
+  d = min(d, sdEll(p - vec2(-0.13,-0.78), vec2(0.09,0.05)));
+  d = min(d, sdEll(p - vec2(0.13,-0.78), vec2(0.09,0.05)));
+  d = min(d, sdTaper(p, vec2(0.28,-0.7), vec2(0.58,-0.6), 0.055, 0.045));
+  d = min(d, sdTaper(p, vec2(0.58,-0.6), vec2(0.66,-0.3), 0.045, 0.035));
+  d = min(d, sdTaper(p, vec2(0.66,-0.3), vec2(0.58,-0.12), 0.035, 0.03));
+  d = min(d, sdTri(rot(0.75) * (p - vec2(-0.27,0.36)), 0.085));
+  d = min(d, sdTri(rot(-0.75) * (p - vec2(0.27,0.36)), 0.085));
+  d = min(d, sdSeg(p, vec2(-0.2,0.13), vec2(-0.46,0.18), 0.006));
+  d = min(d, sdSeg(p, vec2(-0.2,0.1), vec2(-0.45,0.06), 0.006));
+  d = min(d, sdSeg(p, vec2(0.2,0.13), vec2(0.46,0.18), 0.006));
+  d = min(d, sdSeg(p, vec2(0.2,0.1), vec2(0.45,0.06), 0.006));
+  // eye patch and strap
+  d = max(d, -(length(p - vec2(-0.11,0.24)) - 0.065));
+  d = max(d, -sdSeg(p, vec2(-0.11,0.24), vec2(0.27,0.36), 0.012));
+  d = max(d, -sdSeg(p, vec2(-0.11,0.24), vec2(-0.3,0.15), 0.012));
+  // the other eye, round and not thinking about much
+  d = max(d, -(length(p - vec2(0.11,0.23)) - 0.048));
+  d = min(d, length(p - vec2(0.125,0.25)) - 0.016);
+  // nose and a small tongue
+  d = max(d, -sdTri(rot(3.14159) * (p - vec2(0.0,0.14)), 0.022));
+  d = max(d, -(abs(sdEll(p - vec2(0.015,0.08), vec2(0.022,0.03))) - 0.006));
+  // the hat, on slightly wrong
+  vec2 h = rot(0.28) * (p - vec2(0.02,0.46));
+  float hat = smin(sdEll(h, vec2(0.36,0.075)), sdEll(h - vec2(0.0,0.07), vec2(0.19,0.13)), 0.05);
+  d = max(d, -(hat - 0.025));
+  d = min(d, hat);
+  d = max(d, -sdSeg(h, vec2(-0.035,0.04), vec2(0.035,0.11), 0.008));
+  d = max(d, -sdSeg(h, vec2(0.035,0.04), vec2(-0.035,0.11), 0.008));
+  return d;
+}
+float sCatSmall(vec2 p){ return sCat((p - vec2(0.12,-0.3)) / 0.6) * 0.6; }
+
+float dissolveOf(float s){
+  if (s < 0.5) return 0.3;
+  if (s < 1.5) return 0.28;
+  if (s < 2.5) return 0.35;
+  if (s < 3.5) return 0.45;
+  if (s < 4.5) return 0.2;
+  if (s < 5.5) return 0.4;
+  return 0.15;
+}
+float scene(float s, vec2 p){
+  if (s < 0.5) return sSpecimen(p);
+  if (s < 1.5) return sPond(p);
+  if (s < 2.5) return sField(p);
+  if (s < 3.5) return sInstrument(p);
+  if (s < 4.5) return (0.45 - texture2D(uWhisper, whUV(p)).g) * 0.5;
+  if (s < 5.5) return sLantern(p);
+  return sCat(p);
+}
+float sceneFaint(float s, vec2 p){
+  if (s > 1.5 && s < 2.5) return fField(p);
+  if (s > 2.5 && s < 3.5) return fInstrument(p);
+  return 1e3;
+}
+
+void main(){
+  vec2 fc = gl_FragCoord.xy;
+  vec2 uv = fc / uRes;
+  vec2 p = (fc - uCenter) / uScale;
+  float legib = (uMode < 0.5)
+    ? 1.0 - smoothstep(0.30, 0.52, uv.x + (fbm(uv*vec2(1.5,3.0) + 4.0) - 0.5)*0.14)
+    : 1.0 - smoothstep(0.36, 0.52, uv.y + (fbm(uv*vec2(3.0,1.5) + 4.0) - 0.5)*0.08);
+  float t = uTime;
+
+  float fi = floor(uProg); float fr = uProg - fi;
+  float k = smoothstep(0.55, 1.0, fr);
+  float wet = sin(3.14159 * k);
+  float sa = mod(fi, 7.0), sb = mod(fi + 1.0, 7.0);
+
+  vec2 wq = vec2(fbm(p*1.7 + vec2(0.0, t*0.02)), fbm(p*1.7 + vec2(5.2, 1.3) - t*0.015));
+  float diss = mix(dissolveOf(sa), dissolveOf(sb), k);
+  vec2 pw = p + (wq - 0.5) * (0.07 + 0.16*diss + 0.24*wet);
+  float d = mix(scene(sa, pw), scene(sb, pw), k);
+  float wPond = (abs(sa - 1.0) < 0.5 ? 1.0 - k : 0.0) + (abs(sb - 1.0) < 0.5 ? k : 0.0);
+  float wLamp = (abs(sa - 5.0) < 0.5 ? 1.0 - k : 0.0) + (abs(sb - 5.0) < 0.5 ? k : 0.0);
+  float wWh = (abs(sa - 4.0) < 0.5 ? 1.0 - k : 0.0) + (abs(sb - 4.0) < 0.5 ? k : 0.0);
+  vec3 WT = vec3(0.0); float whFall = 0.0, whBloom = 0.0;
+  if (wWh > 0.001){
+    WT = texture2D(uWhisper, whUV(pw)).rgb;
+    whBloom = fbm(p*2.0 + 31.0);
+    float rr = length((p - vec2(-0.05, 0.06)) * vec2(0.78, 0.95));
+    whFall = 1.0 - smoothstep(0.55, 1.25, rr + (whBloom - 0.5)*0.6);
+  }
+  float faint = (1.0 - k) * smoothstep(0.006, -0.004, sceneFaint(sa, pw)) + k * smoothstep(0.006, -0.004, sceneFaint(sb, pw));
+  d += (fbm(p*16.0) - 0.5) * 0.03 + (fbm(p*45.0) - 0.5) * 0.012;
+
+  float w  = fbm(p*1.3 + 1.8*vec2(fbm(p*1.1 + t*0.01), fbm(p*1.1 + 3.7)));
+  float w2 = fbm(p*3.5 + 7.1);
+
+  vec3 navy = vec3(0.08, 0.16, 0.23);
+  vec3 deep = vec3(0.13, 0.27, 0.36);
+  vec3 teal = vec3(0.31, 0.49, 0.57);
+  vec3 pale = vec3(0.67, 0.77, 0.80);
+  vec3 sand = vec3(0.73, 0.65, 0.48);
+  vec3 rust = vec3(0.62, 0.44, 0.24);
+  vec3 white = vec3(0.92, 0.94, 0.94);
+
+  vec3 col = mix(deep, teal, smoothstep(0.3, 0.7, w2));
+  float sandAmt = smoothstep(0.38, 0.66, w + 0.25*(w2 - 0.5) - p.y*0.14) * (1.0 - legib*0.88);
+  col = mix(col, mix(sand, rust, smoothstep(0.6, 0.9, w2)*0.6), sandAmt*0.85);
+  col = mix(col, navy, smoothstep(0.2, 1.0, p.y) * 0.35 * (1.0 - sandAmt));
+
+  float near = exp(-max(d, 0.0) * 12.0);
+  col = mix(col, navy, near * 0.72 * (1.0 - sandAmt*0.45));
+  float ringL = smoothstep(0.018, 0.0, abs(d - 0.05 - (w2 - 0.5)*0.05)) * smoothstep(0.45, 0.65, fbm(p*4.0 + 9.0));
+  col = mix(col, rust, ringL * 0.4);
+  col = mix(col, mix(navy, deep, smoothstep(0.3, 0.8, w)), legib * 0.5);
+  float tide = smoothstep(0.012, 0.0, abs(w - 0.56));
+  col = mix(col, navy, tide * 0.5);
+  float tideP = smoothstep(0.008, 0.0, abs(w - 0.44)) * smoothstep(0.4, 0.6, w2);
+  col = mix(col, mix(teal, sand, 0.4), tideP * 0.45);
+  float tideD = smoothstep(0.01, 0.0, abs(w2 - 0.62)) * legib;
+  col = mix(col, navy * 0.7, tideD * 0.35);
+
+  // II: the pond below the waterline is marbled
+  if (wPond > 0.001){
+    float below = smoothstep(0.08, -0.02, p.y);
+    float mf = p.y*5.0 + 1.2*sin(p.x*3.0 + 2.0*fbm(p*1.5)) + 0.8*fbm(p*3.0 + t*0.02);
+    float mline = 1.0 - smoothstep(0.0, 0.06, abs(fract(mf) - 0.5));
+    col = mix(col, mix(teal, pale, 0.5), mline * 0.28 * wPond * below * (1.0 - legib));
+  }
+  // VI: the lantern warms the print around it
+  if (wLamp > 0.001){
+    float glow = exp(-length(p - vec2(0.0, 0.02)) * 2.6);
+    glow += 0.5 * (exp(-length(p - vec2(-0.74,-0.6))*9.0) + exp(-length(p - vec2(-0.42,-0.85))*9.0)
+                 + exp(-length(p - vec2(0.42,-0.85))*9.0) + exp(-length(p - vec2(0.74,-0.6))*9.0));
+    col = mix(col, vec3(0.86, 0.71, 0.48), clamp(glow * 1.3, 0.0, 1.0) * 0.62 * wLamp * (1.0 - legib*0.7));
+  }
+
+  // V: marbled wash through the field, a faint warm bloom where the whisper is
+  if (wWh > 0.001){
+    float mf = p.y*4.0 + 1.4*sin(p.x*2.6 + 2.4*fbm(p*1.3)) + 0.9*fbm(p*2.6 + t*0.02);
+    float mline = 1.0 - smoothstep(0.0, 0.05, abs(fract(mf) - 0.5));
+    col = mix(col, mix(teal, pale, 0.45), mline * 0.2 * wWh * (1.0 - legib));
+    float warm = exp(-length(p - vec2(0.14, 0.04)) * 3.2) * smoothstep(0.35, 0.7, whBloom);
+    col = mix(col, mix(sand, rust, 0.35), warm * 0.45 * wWh);
+  }
+
+  // faint paths, debris and drifting type
+  col = mix(col, mix(pale, white, 0.4), faint * 0.32 * (1.0 - legib*0.85));
+
+  float wash = smoothstep(0.3, 0.62, fbm(p*2.2 + 13.0 + t*0.01));
+  float inside = smoothstep(0.006 + 0.02*diss, -0.006, d) * clamp(1.0 - diss*1.3*wash, 0.0, 1.0) * (1.0 - legib*0.85);
+  if (wWh > 0.001){
+    float nb = 0.6*fbm(p*2.6 + 9.0) + 0.4*fbm(p*7.0 + 3.0);
+    float thr = 0.06 + 0.62*nb;
+    float insideV = smoothstep(thr, min(thr + 0.45, 0.98), WT.g) * whFall * (0.78 + 0.22*smoothstep(0.3, 0.6, wash)) * (1.0 - legib*0.85);
+    inside = mix(inside, insideV, wWh);
+    float bloomEdge = smoothstep(0.07, 0.0, abs(WT.g - thr)) * smoothstep(0.02, 0.12, WT.g) * whFall;
+    col = mix(col, navy * 0.85, bloomEdge * 0.35 * wWh);
+  }
+  float mott = fbm(p*9.0 + 3.0);
+  vec3 sil = mix(white, pale, smoothstep(0.35, 0.75, mott) * 0.8);
+  sil = mix(sil, teal, smoothstep(0.62, 0.9, fbm(p*22.0)) * 0.35);
+  sil = mix(sil, mix(pale, teal, 0.5), diss * 0.45);
+  sil = mix(sil, vec3(0.95, 0.88, 0.74), wLamp * 0.3);
+  col = mix(col, sil, inside);
+  float edge = smoothstep(0.016, 0.0, abs(d + 0.004));
+  col = mix(col, navy*0.8, edge * 0.85 * clamp(1.0 - diss*1.1*wash, 0.0, 1.0) * (1.0 - legib*0.85) * (1.0 - 0.8*wWh));
+  // V: the ink drawing, dark on the paper and pale where it crosses the wash
+  if (wWh > 0.001){
+    float broken = 0.5 + 0.5*smoothstep(0.32, 0.6, fbm(p*4.0 + 17.0));
+    float inkA = WT.r * clamp(whFall*1.3 + 0.1, 0.0, 1.0) * broken * wWh * (1.0 - legib*0.85);
+    vec3 inkDark = mix(navy*0.55, rust*0.75, smoothstep(0.58, 0.78, fbm(p*2.5 + 40.0))*0.55);
+    vec3 inkCol = mix(mix(pale, teal, 0.3), inkDark, smoothstep(0.1, 0.5, inside));
+    col = mix(col, inkCol, inkA * mix(0.55, 0.95, smoothstep(0.1, 0.5, inside)));
+    float diagA = WT.b * (1.0 - smoothstep(0.95, 1.5, length(p))) * (0.6 + 0.4*broken) * wWh * (1.0 - legib*0.9);
+    col = mix(col, mix(white, pale, 0.3), diagA * 0.6);
+  }
+
+  float sp = step(0.996, hash(floor(fc * 0.5)));
+  col = mix(col, white, sp * 0.6 * near * (1.0 - inside));
+
+  vec2 vg = uv - 0.5;
+  col *= 1.0 - dot(vg, vg) * 0.35;
+  vec3 outc = col;
+  outc *= 0.975 + 0.025 * hash(fc + 3.7);
+  gl_FragColor = vec4(outc, 1.0);
+}`;
+  const VERT = `attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }`;
+
+  let prog = null, U = {}, paper = [0.97, 0.965, 0.945], dirty = true, lastProg = -1;
+
+  function hexToRgb(h){
+    h = h.trim().replace('#','');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const n = parseInt(h, 16);
+    return isNaN(n) ? [0.97,0.965,0.945] : [(n >> 16 & 255)/255, (n >> 8 & 255)/255, (n & 255)/255];
+  }
+  function readPaper(){ paper = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue('--paper')); dirty = true; }
+
+  function initGL(){
+    if (!gl) return false;
+    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(s)); return null; } return s; };
+    const v = sh(gl.VERTEX_SHADER, VERT), f = sh(gl.FRAGMENT_SHADER, FRAG);
+    if (!v || !f) return false;
+    prog = gl.createProgram(); gl.attachShader(prog, v); gl.attachShader(prog, f); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false;
+    gl.useProgram(prog);
+    const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    for (const n of ['uRes','uTime','uProg','uCenter','uRad','uScale','uPaper','uMode','uWhisper']) U[n] = gl.getUniformLocation(prog, n);
+    // a 1x1 blank texture until the drawing is ready
+    const blank = gl.createTexture(); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, blank);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,255]));
+    gl.uniform1i(U.uWhisper, 0);
+    return true;
+  }
+
+// Plate V drawn as three grayscale layers: R = ink lines, G = paper fill with tone, B = diagram lines.
+function drawWhisper(S){
+  const mk = () => { const c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0,0,S,S); x.setTransform(S/1000,0,0,S/1000,0,0); x.lineCap='round'; x.lineJoin='round'; return [c,x]; };
+  const [inkC, ink] = mk(), [fillC, fill] = mk(), [diagC, diag] = mk();
+  let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const W = a => `rgba(255,255,255,${a})`;
+  const LW = 1.3;
+  const st = (x, d, w, a, dash) => { x.strokeStyle = W(a); x.lineWidth = w * LW; if (dash) x.setLineDash(dash); x.stroke(new Path2D(d)); x.setLineDash([]); };
+  const fl = (x, d, a) => { x.fillStyle = W(a); x.fill(new Path2D(d)); };
+  const shade = (cx, cy, rx, ry, a, rot=0) => { const g = fill.createRadialGradient(0,0,0,0,0,1); g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+    fill.save(); fill.translate(cx,cy); fill.rotate(rot); fill.scale(rx,ry); fill.fillStyle = g; fill.beginPath(); fill.arc(0,0,1,0,6.3); fill.fill(); fill.restore(); };
+  const dot = (x, cx, cy, r, a) => { x.fillStyle = W(a); x.beginPath(); x.arc(cx,cy,r,0,6.3); x.fill(); };
+  function strokesAlong(x, pts, n, len, ang, angJ, w, a){
+    for (let i = 0; i < n; i++){
+      const t = rnd() * (pts.length - 1), k = Math.floor(t), f = t - k;
+      const p0 = pts[k], p1 = pts[Math.min(k+1, pts.length-1)];
+      const px = p0[0] + (p1[0]-p0[0])*f + (rnd()-0.5)*7, py = p0[1] + (p1[1]-p0[1])*f + (rnd()-0.5)*7;
+      const an = (typeof ang === 'function' ? ang(t/(pts.length-1)) : ang) + (rnd()-0.5)*angJ;
+      const L = len[0] + rnd()*(len[1]-len[0]);
+      const bx = px + Math.cos(an)*L, by = py + Math.sin(an)*L;
+      const bend = (rnd()-0.3)*L*0.15;
+      const cx = (px+bx)/2 + Math.cos(an+1.57)*bend, cy = (py+by)/2 + Math.sin(an+1.57)*bend;
+      x.strokeStyle = W(a*(0.5+0.5*rnd())); x.lineWidth = LW*w*(0.6+0.7*rnd());
+      x.beginPath(); x.moveTo(px,py); x.quadraticCurveTo(cx,cy,bx,by); x.stroke();
+    }
+  }
+  function hairIn(x, d, n, len, ang, angJ, w, a){
+    const P = new Path2D(d); const k = S/1000; let placed = 0, tries = 0;
+    while (placed < n && tries < n*20){ tries++;
+      const px = 150 + rnd()*850, py = 150 + rnd()*800;
+      const q = x.getTransform().transformPoint(new DOMPoint(px, py));
+      if (!x.isPointInPath(P, q.x, q.y)) continue; placed++;
+      const an = ang + (rnd()-0.5)*angJ, L = len[0] + rnd()*(len[1]-len[0]);
+      const bx = px + Math.cos(an)*L, by = py + Math.sin(an)*L, bend = (rnd()-0.4)*L*0.18;
+      x.strokeStyle = W(a*(0.4+0.6*rnd())); x.lineWidth = LW*w*(0.6+0.7*rnd());
+      x.beginPath(); x.moveTo(px,py); x.quadraticCurveTo((px+bx)/2 + Math.cos(an+1.57)*bend, (py+by)/2 + Math.sin(an+1.57)*bend, bx, by); x.stroke();
+    }
+  }
+  function hatch(x, clip, ang, gap, w, a){
+    x.save(); x.clip(new Path2D(clip));
+    const c = Math.cos(ang), s = Math.sin(ang);
+    for (let o = -1400; o < 1400; o += gap){
+      const j = (rnd()-0.5)*gap*0.5;
+      x.strokeStyle = W(a*(0.5+0.5*rnd())); x.lineWidth = LW*w*(0.7+0.5*rnd());
+      x.beginPath(); x.moveTo(500 - s*(o+j) - c*1400, 500 + c*(o+j) - s*1400); x.lineTo(500 - s*(o+j) + c*1400, 500 + c*(o+j) + s*1400); x.stroke();
+    }
+    x.restore();
+  }
+  // contour echoes: the outline repeated, scaled, broken, fading outward
+  function echoes(x, d, cx, cy, n, a){
+    for (let i = 1; i <= n; i++){
+      const s = 1 + i*0.045;
+      x.save(); x.translate(cx,cy); x.scale(s, s*(1 + i*0.01)); x.translate(-cx,-cy);
+      x.setLineDash([20 + rnd()*90, 12 + rnd()*60]); x.lineDashOffset = rnd()*200;
+      x.strokeStyle = W(a * (1 - i/(n+1))); x.lineWidth = 0.8 / s; x.stroke(new Path2D(d));
+      x.restore();
+    }
+    x.setLineDash([]);
+  }
+
+  const fadeTo = (x, x0, y0, x1, y1, a0, a1, rect) => {
+    const g = x.createLinearGradient(x0, y0, x1, y1);
+    g.addColorStop(0, `rgba(0,0,0,${a0})`); g.addColorStop(1, `rgba(0,0,0,${a1})`);
+    x.fillStyle = g; x.fillRect(...rect);
+  };
+
+  // the man: drawn in his own coordinates, then mirrored so he faces left with his ear to the right
+  [ink, fill, diag].forEach(x => { x.save(); x.translate(1000, 0); x.scale(-1, 1); });
+  // ================= the listener: an old man, drawn mirrored so his ear faces the whisper =================
+  const HEAD = "M330,800 C280,720 230,620 222,520 C214,420 250,300 330,240 C380,205 450,200 505,225 C545,245 565,285 570,330 C574,360 571,380 578,398 C584,410 586,420 588,430 C596,455 618,488 636,512 C644,524 640,536 626,538 C616,540 608,538 600,540 C606,552 614,566 612,582 C610,596 604,606 600,616 C598,632 606,652 596,670 C582,692 545,702 515,700 C485,700 462,730 452,800 Z";
+  fl(fill, HEAD, 1);
+  shade(470, 436, 46, 22, 0.32); shade(554, 430, 20, 14, 0.3); shade(585, 548, 38, 14, 0.25);
+  shade(520, 708, 95, 40, 0.4); shade(250, 520, 40, 140, 0.25); shade(560, 470, 16, 46, 0.22, 0.5);
+  shade(450, 560, 50, 60, 0.14);
+
+  echoes(ink, HEAD, 420, 500, 5, 0.5);
+  ink.save(); ink.clip(new Path2D(HEAD));
+  for (let i = 1; i <= 6; i++){
+    const sc = 1 - i*0.075;
+    ink.save(); ink.translate(470, 470); ink.scale(sc, sc*0.96); ink.translate(-470, -470);
+    ink.setLineDash([30 + rnd()*120, 18 + rnd()*50]); ink.lineDashOffset = rnd()*300;
+    ink.strokeStyle = W(0.22 + 0.04*i); ink.lineWidth = 0.9/sc; ink.stroke(new Path2D(HEAD)); ink.restore();
+  }
+  ink.setLineDash([]); ink.restore();
+  hatch(ink, "M250,420 L330,410 L380,560 L440,620 L470,700 L380,720 L300,640 Z", 2.25, 9, 0.6, 0.28);
+  hatch(ink, "M410,300 L440,300 L420,380 L396,420 L380,360 Z", 1.9, 6, 0.6, 0.32);
+  st(ink, "M452,510 C470,540 478,566 474,590", 0.7, 0.3);
+  st(ink, "M560,620 C550,640 548,660 556,676", 0.7, 0.3);
+  st(ink, "M444,500 C452,496 462,498 470,504", 0.6, 0.3);
+  st(ink, "M500,710 C520,724 548,728 572,720", 0.7, 0.3);
+  // profile: forehead, brow, nose, lips, chin
+  st(ink, "M505,225 C545,245 565,285 570,330 C574,360 571,380 578,398 C584,410 586,420 588,430 C596,455 618,488 636,512 C644,524 640,536 626,538 C616,540 608,538 600,540", 2.2, 0.95);
+  st(ink, "M600,616 C598,632 606,652 596,670 C582,692 545,702 515,700 C489,700 468,724 458,770", 1.8, 0.85);
+  st(ink, "M505,225 C450,200 380,205 330,240 C262,290 222,380 220,470", 1.3, 0.5, [60,18,30,24]);
+  st(ink, "M222,520 C230,620 268,700 314,770", 1.0, 0.35, [40,30]);
+  // the ear
+  st(ink, "M374,432 C346,420 326,444 332,474 C336,508 348,533 355,554 C361,571 381,575 389,558", 1.9, 0.9);
+  st(ink, "M368,454 C352,456 350,478 358,498 C364,515 374,523 377,538", 1.3, 0.75);
+  st(ink, "M388,492 C380,502 382,517 391,523", 1.2, 0.7);
+  st(ink, "M354,472 C358,482 362,490 368,496", 0.9, 0.5);
+  // near eye: narrowed, sliding back toward the voice at his ear
+  const EYE1 = "M424,436 C440,419 472,414 502,427 C488,441 462,447 430,440 Z";
+  ink.save(); ink.clip(new Path2D(EYE1));
+  ink.strokeStyle = W(0.85); ink.lineWidth = 1.3; ink.beginPath(); ink.arc(440, 433, 9.5, 0, 6.3); ink.stroke();
+  for (let i = 0; i < 18; i++){ const a = i/18*6.28; st(ink, `M${440+Math.cos(a)*4},${433+Math.sin(a)*4} L${440+Math.cos(a)*9},${433+Math.sin(a)*9}`, 0.6, 0.55); }
+  dot(ink, 440, 433, 3.8, 0.95); ink.fillStyle = '#000'; ink.beginPath(); ink.arc(442.5, 430.5, 1.4, 0, 6.3); ink.fill();
+  ink.restore();
+  st(ink, "M424,436 C440,419 472,414 502,427", 2.1, 0.95);
+  st(ink, "M430,440 C462,447 488,441 502,427", 1.1, 0.7);
+  for (let i = 0; i < 9; i++){ const t = 0.2 + i*0.08, x0 = 424 + t*78, y0 = 436 - Math.sin(t*3.14)*19; st(ink, `M${x0},${y0} l${2+i*0.4},${-5}`, 0.7, 0.6); }
+  st(ink, "M418,424 C438,402 474,398 506,414", 1.1, 0.6);
+  st(ink, "M414,416 C436,393 478,389 510,405", 0.8, 0.35);
+  st(ink, "M428,458 C448,470 478,469 500,454", 1.0, 0.55);
+  st(ink, "M432,473 C454,485 486,482 506,467", 0.8, 0.4);
+  st(ink, "M440,488 C460,497 490,495 510,481", 0.7, 0.28);
+  [[396,424],[392,437],[395,451],[402,463],[400,412]].forEach(([x2,y2]) => st(ink, `M418,434 Q${(418+x2)/2},${(434+y2)/2+3} ${x2},${y2}`, 0.8, 0.5));
+  // far eye, half behind the bridge
+  const EYE2 = "M538,431 C546,422 558,421 568,426 C562,434 550,436 540,433 Z";
+  ink.save(); ink.clip(new Path2D(EYE2)); dot(ink, 545, 429, 6.5, 0.85); ink.fillStyle = '#000'; ink.beginPath(); ink.arc(546.5, 427.5, 1.2, 0, 6.3); ink.fill(); ink.restore();
+  st(ink, "M538,431 C546,422 558,421 568,426", 1.6, 0.9);
+  st(ink, "M540,433 C550,436 562,434 568,426", 0.9, 0.6);
+  st(ink, "M542,446 C550,452 560,451 568,445", 0.7, 0.4);
+  // brows: bushy, the near one lifted at its outer end
+  strokesAlong(ink, [[406,404],[428,390],[452,381],[478,382],[502,392]], 170, [9,20], t => -0.95 + t*0.95, 0.5, 1.15, 0.9);
+  strokesAlong(ink, [[530,404],[548,397],[570,401]], 60, [7,14], -0.2, 0.5, 1.0, 0.85);
+  // forehead
+  st(ink, "M424,318 C458,302 510,300 548,314", 0.9, 0.5);
+  st(ink, "M430,339 C462,327 506,325 552,337", 0.8, 0.45);
+  st(ink, "M446,296 C476,286 512,286 540,294", 0.7, 0.35);
+  st(ink, "M440,358 C462,351 482,350 502,354", 0.7, 0.35);
+  st(ink, "M512,360 C528,355 545,357 560,362", 0.7, 0.3);
+  st(ink, "M500,378 C506,370 514,368 520,372", 0.8, 0.45);
+  // nose
+  st(ink, "M548,440 C562,462 578,484 590,502", 1.0, 0.5);
+  st(ink, "M594,512 C580,522 583,541 603,543", 1.6, 0.85);
+  ink.fillStyle = W(0.75); ink.beginPath(); ink.ellipse(613, 536, 7, 3.6, 0.15, 0, 6.3); ink.fill();
+  hatch(ink, "M540,446 L596,506 L586,530 L556,520 L534,480 Z", 1.15, 6, 0.7, 0.42);
+  // cheek, folds, jowl
+  st(ink, "M584,516 C556,544 540,580 542,624", 1.4, 0.75);
+  st(ink, "M500,496 C488,528 486,560 496,592", 0.9, 0.45);
+  st(ink, "M444,474 C470,486 498,492 522,490", 0.8, 0.35);
+  st(ink, "M520,646 C540,664 566,676 590,670", 1.1, 0.55);
+  st(ink, "M470,520 C462,548 460,575 466,604", 0.7, 0.3);
+  hatch(ink, "M398,470 L478,486 L492,570 L436,604 L388,546 Z", 1.25, 7, 0.6, 0.35);
+  st(ink, "M404,388 C396,372 398,352 410,338", 0.8, 0.4);
+  st(ink, "M392,600 C410,630 440,650 470,660", 0.8, 0.35);
+  st(ink, "M506,610 C512,630 516,648 514,668", 0.7, 0.3);
+  shade(400, 380, 30, 40, 0.18); shade(430, 590, 60, 40, 0.15);
+  hatch(ink, "M462,650 L540,700 L490,770 L440,770 Z", 0.9, 6, 0.7, 0.42);
+  // short grey hair around and behind the ear, a few wisps on top
+  hairIn(ink, "M246,336 C276,304 330,292 352,322 C366,360 362,414 350,440 C340,426 326,424 322,446 L326,566 C314,606 292,646 266,664 C244,604 234,522 236,444 C238,394 242,360 246,336 Z", 200, [10,24], 1.95, 0.9, 0.75, 0.5);
+  // unruly hair: strands lift off the sides and back and come apart into the print's thin lines
+  const scalp = [[246,560],[234,505],[228,450],[232,398],[246,350],[268,308],[298,274],[332,250]];
+  scalp.forEach(([x2, y2]) => { const g = fill.createRadialGradient(x2, y2, 0, x2, y2, 34); g.addColorStop(0, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); fill.fillStyle = g; fill.beginPath(); fill.arc(x2, y2, 34, 0, 6.3); fill.fill(); });
+  for (let i = 0; i < 56; i++){
+    const tt = rnd() * (scalp.length - 1), kk = Math.floor(tt), ff = tt - kk;
+    const a0 = scalp[kk], a1 = scalp[Math.min(kk+1, scalp.length-1)];
+    const sx0 = a0[0] + (a1[0]-a0[0])*ff + (rnd()-0.5)*10, sy0 = a0[1] + (a1[1]-a0[1])*ff + (rnd()-0.5)*10;
+    let nx = sx0 - 420, ny = sy0 - 460; const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+    const jit = (rnd()-0.5)*0.9; let dx = nx*0.9 + jit, dy = ny*0.6 - 0.8; const dl = Math.hypot(dx, dy); dx /= dl; dy /= dl;
+    const px = -dy, py = dx;
+    const L = 120 + rnd()*220;
+    const c1 = (rnd()-0.5)*90, c2 = (rnd()-0.5)*120, c3 = (rnd()-0.5)*140;
+    const P = [[sx0, sy0], [sx0 + dx*L*0.35 + px*c1, sy0 + dy*L*0.35 + py*c1], [sx0 + dx*L*0.7 + px*c2, sy0 + dy*L*0.7 + py*c2], [sx0 + dx*L + px*c3, sy0 + dy*L + py*c3]];
+    const B = t => { const u = 1 - t; return [u*u*u*P[0][0] + 3*u*u*t*P[1][0] + 3*u*t*t*P[2][0] + t*t*t*P[3][0], u*u*u*P[0][1] + 3*u*u*t*P[1][1] + 3*u*t*t*P[2][1] + t*t*t*P[3][1]]; };
+    let prev = B(0);
+    for (let j = 1; j <= 26; j++){
+      const t = j/26, cur = B(t);
+      const wdt = LW * 1.25 * (1 - t*0.7);
+      if (t < 0.38){ ink.strokeStyle = W(0.62 * (1 - t*1.2)); ink.lineWidth = wdt; ink.beginPath(); ink.moveTo(prev[0], prev[1]); ink.lineTo(cur[0], cur[1]); ink.stroke(); }
+      if (t > 0.25){ const da = Math.min(1, (t - 0.25)/0.25) * (1 - Math.max(0, t - 0.85)/0.15) * 0.7; diag.strokeStyle = W(da); diag.lineWidth = 0.9; diag.beginPath(); diag.moveTo(prev[0], prev[1]); diag.lineTo(cur[0], cur[1]); diag.stroke(); }
+      prev = cur;
+    }
+    if (rnd() < 0.12) dot(diag, prev[0], prev[1], 2.6, 0.8);
+  }
+
+  hairIn(ink, "M392,436 C400,410 404,390 398,372 C392,388 384,410 382,432 Z", 30, [8,16], 1.7, 0.4, 0.7, 0.45);
+  strokesAlong(ink, [[318,252],[372,226],[436,214]], 45, [10,22], -0.25, 0.7, 0.6, 0.3);
+  // the moustache, full and drooping
+  strokesAlong(ink, [[526,548],[548,543],[572,541],[596,544],[618,552]], 420, [22,48], t => 2.15 - t*1.15, 0.32, 1.15, 0.95);
+  strokesAlong(ink, [[510,572],[522,582],[534,592]], 70, [12,26], 2.25, 0.4, 0.95, 0.8);
+  st(ink, "M570,606 C584,614 598,612 606,603", 1.1, 0.7);
+  st(ink, "M576,622 C586,628 596,627 602,622", 0.8, 0.45);
+  st(ink, "M572,600 C566,604 562,602 560,598", 0.8, 0.5);
+  // neck, collar
+  st(ink, "M330,800 C350,830 390,858 430,866", 1.0, 0.4);
+  st(ink, "M458,770 C480,792 520,806 560,808", 0.9, 0.35);
+  st(ink, "M452,800 C462,830 474,860 492,890", 0.7, 0.28);
+  st(ink, "M470,742 C490,752 510,756 530,754", 0.7, 0.3);
+
+  [ink, fill, diag].forEach(x => x.restore());
+  // the back of his head thins out behind the ear
+  fadeTo(fill, 690, 0, 800, 0, 0, 0.9, [690, 0, 310, 1000]);
+  fadeTo(ink, 700, 0, 800, 0, 0, 0.5, [700, 380, 300, 620]);
+
+  // ================= the whisperer: a fragment at the edge, lips at his ear, hand cupped =================
+  const WPRO = "M1000,270 C930,262 870,276 846,306 C830,330 822,356 814,374 C808,388 802,396 796,404 C782,426 760,450 744,468 C738,476 742,484 754,486 C764,488 772,490 770,498 C766,504 758,508 756,514 C754,522 760,528 762,534 C764,546 768,556 776,566 C800,590 840,604 880,612";
+  const WF = WPRO + " L1000,640 Z";
+  // a dark seam so the two heads stay two heads
+  fill.strokeStyle = 'rgba(0,0,0,0.85)'; fill.lineWidth = 30; fill.stroke(new Path2D(WPRO));
+  fl(fill, WF, 0.68);
+  ink.fillStyle = '#000'; ink.fill(new Path2D(WF));
+  shade(890, 480, 90, 120, 0.15);
+  st(ink, WPRO, 1.8, 0.85);
+  st(ink, "M756,514 C764,517 773,516 781,512", 1.1, 0.7);
+  st(ink, "M768,478 C775,482 779,487 777,492", 1.0, 0.6);
+  st(ink, "M812,412 C820,406 832,406 840,411", 1.3, 0.75);
+  st(ink, "M814,418 C822,422 832,421 839,415", 0.9, 0.5);
+  dot(ink, 818, 413, 2.4, 0.85);
+  st(ink, "M808,428 C818,434 830,434 840,428", 0.7, 0.35);
+  strokesAlong(ink, [[812,396],[830,389],[852,391]], 36, [7,13], -0.2, 0.4, 0.8, 0.55);
+  st(ink, "M790,486 C808,510 830,526 862,534", 0.7, 0.32);
+  st(ink, "M852,340 C858,362 858,380 852,398", 0.6, 0.3);
+  st(ink, "M916,448 C936,440 950,456 948,482 C946,508 934,528 920,530 C912,530 908,522 912,514", 1.4, 0.7);
+  st(ink, "M920,464 C932,460 938,474 934,492", 1.0, 0.5);
+  strokesAlong(ink, [[890,282],[940,272],[990,270]], 50, [8,18], -0.7, 0.5, 0.7, 0.4);
+
+  // the cupped hand, mirrored so the fingers curl toward his ear
+  [ink, fill].forEach(x => { x.save(); x.translate(1393, 46); x.scale(-1, 1); });
+  
+  const fingers = [
+    { d: "M620,606 Q614,530 640,486 Q648,476 657,480", w: 20 },
+    { d: "M636,612 Q632,532 657,492 Q665,483 673,488", w: 21 },
+    { d: "M651,620 Q650,548 673,506 Q680,499 687,504", w: 19 },
+    { d: "M664,630 Q668,566 688,532 Q694,526 699,532", w: 15 },
+  ];
+  const BACK = "M598,790 C600,720 606,668 616,612 L680,632 C682,690 676,740 668,790 Z";
+  const THUMB = "M616,652 C604,634 600,610 605,592 C609,582 619,583 623,594";
+  // fill
+  fl(fill, BACK, 1);
+  fill.strokeStyle = W(1); fingers.forEach(f => { fill.lineWidth = f.w; fill.stroke(new Path2D(f.d)); });
+  fill.lineWidth = 16; fill.stroke(new Path2D(THUMB));
+  shade(690, 600, 22, 80, 0.25);
+  // ink: clear the face lines under the hand, then draw it back to front
+  ink.fillStyle = '#000'; ink.fill(new Path2D(BACK));
+  ink.strokeStyle = '#000'; [...fingers].forEach(f => { ink.lineWidth = f.w + 2; ink.stroke(new Path2D(f.d)); });
+  ink.lineWidth = 18; ink.stroke(new Path2D(THUMB));
+  const outlined = (d, w) => { ink.strokeStyle = W(0.9); ink.lineWidth = w + 2.6; ink.stroke(new Path2D(d)); ink.strokeStyle = '#000'; ink.lineWidth = w - 1; ink.stroke(new Path2D(d)); };
+  [...fingers].reverse().forEach(f => outlined(f.d, f.w));
+  outlined(THUMB, 16);
+  st(ink, "M616,612 C606,668 600,720 598,790", 1.6, 0.75);
+  st(ink, "M684,630 C684,690 676,740 668,790", 1.6, 0.75);
+  ink.fillStyle = '#000'; ink.fill(new Path2D("M620,604 L682,624 L680,640 L618,622 Z"));
+  [[628,612],[644,618],[659,627],[672,636]].forEach(([x2,y2]) => st(ink, `M${x2-8},${y2+2} Q${x2},${y2+9} ${x2+8},${y2+2}`, 1.0, 0.6));
+  [[618,550,-0.3],[634,552,-0.25],[651,566,-0.4],[667,586,-0.5]].forEach(([x2,y2,r]) => { st(ink, `M${x2-6},${y2} q6,${r*10} 12,0`, 0.8, 0.55); st(ink, `M${x2-5},${y2+5} q5,${r*8} 10,0`, 0.7, 0.4); });
+  [[653,483],[669,491],[683,507],[695,534]].forEach(([x2,y2]) => st(ink, `M${x2-5},${y2+3} q3,-6 8,-2`, 0.8, 0.55));
+  st(ink, "M628,690 C632,720 634,750 632,780", 0.7, 0.35);
+  st(ink, "M646,694 C650,726 652,752 650,782", 0.6, 0.3);
+  hatch(ink, "M664,640 L684,630 L676,740 L664,780 L656,700 Z", 1.3, 5, 0.7, 0.4);
+
+  [ink, fill].forEach(x => x.restore());
+  // ================= the whisper reaching the ear, and tokens coming loose =================
+  for (let r = 44; r <= 84; r += 13){ diag.strokeStyle = W(0.6 - (r-44)/150); diag.lineWidth = 1.0; diag.beginPath(); diag.arc(642, 500, r, -1.1, 0.1); diag.stroke(); }
+  [[690,470],[702,488],[706,508]].forEach(([x2,y2]) => dot(diag, x2, y2, 2.8, 0.9));
+  st(diag, "M120,230 C330,120 600,260 940,140", 0.9, 0.4);
+  st(diag, "M80,720 C300,820 520,650 720,830 C820,910 920,860 1000,900", 0.9, 0.38);
+  st(diag, "M160,520 C240,460 300,600 380,560", 0.7, 0.3);
+  st(diag, "M560,960 C600,880 700,900 760,830", 0.7, 0.3);
+  [[230,820,40],[880,836,16],[914,862,11],[650,90,12]].forEach(([x2,y2,r]) => { diag.strokeStyle = W(0.5); diag.lineWidth = 1.0; diag.beginPath(); diag.arc(x2,y2,r,0,6.3); diag.stroke(); });
+  [[650,90,3],[300,180,3.5],[900,560,3],[150,640,4],[700,780,3]].forEach(([x2,y2,r]) => dot(diag, x2, y2, r, 0.85));
+  for (let i = 0; i < 28; i++){
+    const t = i / 27;
+    const x0 = 690 - t*230 + (rnd()-0.5)*(16 + t*110), y0 = 440 - t*330 + (rnd()-0.5)*(16 + t*70);
+    const w = 7 + rnd()*12, h = 9 + rnd()*7, rot = (rnd()-0.5)*(0.4 + t*3.2);
+    const c = rnd() < 0.55 ? ink : diag;
+    c.save(); c.translate(x0,y0); c.rotate(rot);
+    if (rnd() < 0.5){ c.fillStyle = W(0.9 - t*0.55); c.fillRect(-w/2,-h/2,w,h); }
+    else { c.strokeStyle = W(0.9 - t*0.55); c.lineWidth = 1.2; c.strokeRect(-w/2,-h/2,w,h); }
+    c.restore();
+  }
+
+  fadeTo(fill, 0, 590, 0, 790, 0, 1, [0, 590, 1000, 410]);
+  fadeTo(fill, 0, 150, 0, 300, 0.8, 0, [0, 0, 1000, 300]);
+  fadeTo(fill, 880, 0, 1000, 0, 0, 0.75, [880, 0, 120, 1000]);
+  fadeTo(fill, 200, 0, 330, 0, 0.5, 0, [0, 0, 330, 1000]);
+  fadeTo(ink, 0, 640, 0, 860, 0, 0.75, [0, 640, 1000, 360]);
+
+  // soften the fill so it blooms rather than cuts
+  const fx = fillC.getContext('2d'); fx.setTransform(1,0,0,1,0,0);
+  const small = document.createElement('canvas'); small.width = small.height = S/8;
+  const sx = small.getContext('2d'); sx.imageSmoothingEnabled = true; sx.drawImage(fillC, 0, 0, S/8, S/8);
+  const mid = document.createElement('canvas'); mid.width = mid.height = S/4;
+  const mx = mid.getContext('2d'); mx.imageSmoothingEnabled = true; mx.drawImage(small, 0, 0, S/4, S/4);
+  const tiny = document.createElement('canvas'); tiny.width = tiny.height = S/32;
+  const tx = tiny.getContext('2d'); tx.imageSmoothingEnabled = true; tx.drawImage(fillC, 0, 0, S/32, S/32);
+  const tmid = document.createElement('canvas'); tmid.width = tmid.height = S/8;
+  const tmx = tmid.getContext('2d'); tmx.imageSmoothingEnabled = true; tmx.drawImage(tiny, 0, 0, S/8, S/8);
+  fx.imageSmoothingEnabled = true;
+  fx.globalAlpha = 0.85; fx.drawImage(mid, 0, 0, S, S);
+  fx.globalAlpha = 0.4; fx.drawImage(tmid, 0, 0, S, S);
+  fx.globalAlpha = 1;
+
+  const a = ink.getImageData(0,0,S,S).data, b = fx.getImageData(0,0,S,S).data, c = diag.getImageData(0,0,S,S).data;
+  const out = new ImageData(S, S);
+  for (let i = 0; i < a.length; i += 4){ out.data[i] = a[i]; out.data[i+1] = b[i]; out.data[i+2] = c[i]; out.data[i+3] = 255; }
+  return out;
+}
+
+
+  let whTex = null;
+  function loadWhisper(){
+    if (!prog) return;
+    try {
+      const img = drawWhisper(1024);
+      whTex = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, whTex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      dirty = true;
+    } catch (e) { console.warn('plate V drawing failed', e); }
+  }
+
+  function sizeCanvas(){
+    const scale = Math.min(window.devicePixelRatio || 1, 1.5) * 0.85;
+    canvas.width = Math.max(1, Math.round(window.innerWidth * scale));
+    canvas.height = Math.max(1, Math.round(window.innerHeight * scale));
+    dirty = true;
+  }
+
+  function render(now){
+    if (!prog) return;
+    const W = canvas.width, H = canvas.height;
+    const mobile = window.innerWidth <= 820;
+    let cx, cyCss, rx, ry, sc;
+    if (mobile){ cx = W*0.5; cyCss = H*0.28; rx = W*0.6; ry = H*0.22; sc = Math.min(W*0.38, H*0.18); }
+    else { cx = W*0.74; cyCss = H*0.5; rx = W*0.32; ry = H*0.5; sc = Math.min(W*0.26, H*0.42); }
+    gl.viewport(0, 0, W, H);
+    gl.uniform2f(U.uRes, W, H);
+    gl.uniform1f(U.uTime, reduce.matches ? 0 : now / 1000);
+    gl.uniform1f(U.uProg, disp);
+    gl.uniform2f(U.uCenter, cx, H - cyCss);
+    gl.uniform2f(U.uRad, rx, ry);
+    gl.uniform1f(U.uScale, sc);
+    gl.uniform3f(U.uPaper, paper[0], paper[1], paper[2]);
+    gl.uniform1f(U.uMode, mobile ? 1 : 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    lastProg = disp; dirty = false;
+  }
+
+  function frame(now){
+    let diff = target - disp;
+    diff = wrapN(diff + N / 2) - N / 2;
+    disp = reduce.matches ? target : wrapN(disp + diff * 0.12);
+    if (Math.abs(diff) < 0.0005) disp = target;
+    updateText();
+    if (!document.hidden && (!reduce.matches || dirty || Math.abs(disp - lastProg) > 1e-4)) render(now);
+    requestAnimationFrame(frame);
+  }
+
+  const ok = initGL();
+  if (!ok){ canvas.style.display = 'none'; document.getElementById('fallback').style.display = 'block'; }
+  readPaper();
+  sizeCanvas();
+  layout(true);
+  setTimeout(loadWhisper, 60);
+
+  window.addEventListener('scroll', onScroll, { passive:true });
+  window.addEventListener('resize', () => { sizeCanvas(); layout(false); });
+  const scheme = window.matchMedia('(prefers-color-scheme: dark)');
+  scheme.addEventListener && scheme.addEventListener('change', readPaper);
+  reduce.addEventListener && reduce.addEventListener('change', () => { dirty = true; });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { dirty = true; });
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
 </html>
