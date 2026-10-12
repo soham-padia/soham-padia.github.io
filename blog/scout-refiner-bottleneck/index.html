@@ -8,25 +8,36 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="/img/transparent_logo.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/icon/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/img/icon/icon-192.png" />
+    <link rel="apple-touch-icon" href="/img/icon/apple-touch-icon.png" />
 
-    <title>Notes — Soham Padia</title>
-    <meta name="description" content="Research notes by Soham Padia." />
+    <title>The Scout-Refiner Bottleneck: A Negative Result with a Surprising Twist — Soham Padia</title>
+    <meta name="description" content="I designed a two-stage attention module with a width bottleneck, expecting it to be more parameter-efficient than standard MHA. At equal token budget, the baseline beats every variant by 0.19–0.31 nats. But there's a crossover: at short training budgets, one variant actually wins." />
     <meta name="author" content="Soham Padia" />
     <meta name="google-site-verification" content="O-MJuH93st9MnYTExJWHUyoQ02K__jCLgxWwsxoZjag" />
     <meta name="theme-color" content="#F3F0E8" />
 
+    <!-- Per-post values are written into each route's copy by scripts/post-build.js -->
+    <link rel="canonical" href="https://soham-padia.github.io/blog/scout-refiner-bottleneck/" />
+
     <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Notes — Soham Padia" />
-    <meta property="og:description" content="Research notes by Soham Padia." />
-    <meta property="og:image" content="https://soham-padia.github.io/img/SOHAM.png" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Soham Padia" />
+    <meta property="og:url" content="https://soham-padia.github.io/blog/scout-refiner-bottleneck/" />
+    <meta property="og:title" content="The Scout-Refiner Bottleneck: A Negative Result with a Surprising Twist — Soham Padia" />
+    <meta property="og:description" content="I designed a two-stage attention module with a width bottleneck, expecting it to be more parameter-efficient than standard MHA. At equal token budget, the baseline beats every variant by 0.19–0.31 nats. But there's a crossover: at short training budgets, one variant actually wins." />
+    <meta property="og:image" content="https://soham-padia.github.io/img/share/plate-1.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Plate I. A neuron, or a pressed specimen. Printed in cyanotype." />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Notes — Soham Padia" />
-    <meta name="twitter:description" content="Research notes by Soham Padia." />
-    <meta name="twitter:image" content="https://soham-padia.github.io/img/SOHAM.png" />
+    <meta name="twitter:title" content="The Scout-Refiner Bottleneck: A Negative Result with a Surprising Twist — Soham Padia" />
+    <meta name="twitter:description" content="I designed a two-stage attention module with a width bottleneck, expecting it to be more parameter-efficient than standard MHA. At equal token budget, the baseline beats every variant by 0.19–0.31 nats. But there's a crossover: at short training budgets, one variant actually wins." />
+    <meta name="twitter:image" content="https://soham-padia.github.io/img/share/plate-1.jpg" />
+    <meta name="twitter:image:alt" content="Plate I. A neuron, or a pressed specimen. Printed in cyanotype." />
     <script type="module" crossorigin src="/assets/blog-D6jlefD8.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/blog-Cq2TbSSR.css">
   </head>
