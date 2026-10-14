@@ -79,6 +79,9 @@ body{
     linear-gradient(90deg, #0E2232, #1C3A4C);
 }
 .track{ position:relative; z-index:1; }
+/* With a trackpad or mouse, scrolling comes to rest on a chapter, one per screen */
+.snap{ position:absolute; left:0; width:1px; height:1px; scroll-snap-align:start; scroll-snap-stop:always; }
+@media (hover:hover) and (pointer:fine){ html{ scroll-snap-type:y mandatory; } }
 .panel, .top, .index, .captions{ text-shadow:0 1px 14px rgba(4,12,22,.6), 0 0 2px rgba(4,12,22,.35); }
 
 /* Text column, pinned like a stage */
@@ -353,7 +356,11 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
   const topName = document.getElementById('topName');
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
-  let seg = 1, P = 1, lastW = 0, lastH = 0;
+  // Trackpad or mouse: one screen per chapter, snapped (see .snap), and the change
+  // starts as soon as you scroll. Touch: a longer stretch, the first 55% of it still.
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  // ease: how long, in ms, the print takes to catch up with the scroll (time constant)
+  let seg = 1, P = 1, lastW = 0, lastH = 0, rest = 0.55, ease = 130;
   let target = 0, disp = 0;
 
   const wrapN = x => ((x % N) + N) % N;
@@ -364,11 +371,24 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
     if (!force && w === lastW && Math.abs(h - lastH) < 160) return;
     const prog = seg > 1 ? wrapN(window.scrollY / seg) : 0;
     lastW = w; lastH = h;
-    seg = Math.max(520, h * 1.5);
+    rest = fine.matches ? 0 : 0.55;
+    ease = fine.matches ? 330 : 130;
+    seg = fine.matches ? Math.max(520, h) : Math.max(520, h * 1.5);
     P = N * seg;
     track.style.height = (3 * P + h) + 'px';
+    track.replaceChildren(...Array.from({ length: 3 * N + 1 }, (_, i) => {
+      const m = document.createElement('div'); m.className = 'snap'; m.style.top = (i * seg) + 'px'; return m;
+    }));
     window.scrollTo(0, P + prog * seg);
     target = disp = prog;
+  }
+
+  // At rest, step back into the middle copy, which looks the same, so the jumps
+  // in onScroll never land mid-gesture
+  function recenter(){
+    const y = window.scrollY;
+    if (y < P) window.scrollTo(0, y + P);
+    else if (y >= 2 * P) window.scrollTo(0, y - P);
   }
 
   function onScroll(){
@@ -408,7 +428,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
 
   function updateText(){
     const fi = Math.floor(disp), fr = disp - fi;
-    const k = fr <= 0.55 ? 0 : sm(Math.min(1, (fr - 0.55) / 0.45));
+    const k = fr <= rest ? 0 : sm(Math.min(1, (fr - rest) / (1 - rest)));
     const cur = wrapN(fi), nxt = wrapN(fi + 1);
     const still = reduce.matches;
     chapters.forEach((el, i) => {
@@ -532,7 +552,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
 
   const FRAG = `
 precision highp float;
-uniform vec2 uRes; uniform float uTime; uniform float uProg;
+uniform vec2 uRes; uniform float uTime; uniform float uProg; uniform float uRest;
 uniform vec2 uCenter; uniform vec2 uRad; uniform float uScale; uniform vec3 uPaper; uniform float uMode;
 uniform sampler2D uWhisper;
 vec2 whUV(vec2 p){ return (p + vec2(0.36, -0.02)) * 0.38 + 0.5; }
@@ -813,7 +833,7 @@ void main(){
   float t = uTime;
 
   float fi = floor(uProg); float fr = uProg - fi;
-  float k = smoothstep(0.55, 1.0, fr);
+  float k = smoothstep(uRest, 1.0, fr);
   float wet = sin(3.14159 * k);
   float sa = mod(fi, 7.0), sb = mod(fi + 1.0, 7.0);
 
@@ -951,7 +971,7 @@ void main(){
     const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    for (const n of ['uRes','uTime','uProg','uCenter','uRad','uScale','uPaper','uMode','uWhisper']) U[n] = gl.getUniformLocation(prog, n);
+    for (const n of ['uRes','uTime','uProg','uRest','uCenter','uRad','uScale','uPaper','uMode','uWhisper']) U[n] = gl.getUniformLocation(prog, n);
     // a 1x1 blank texture until the drawing is ready
     const blank = gl.createTexture(); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, blank);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,255]));
@@ -1294,6 +1314,7 @@ function drawWhisper(S){
     gl.uniform2f(U.uRes, W, H);
     gl.uniform1f(U.uTime, reduce.matches ? 0 : now / 1000);
     gl.uniform1f(U.uProg, disp);
+    gl.uniform1f(U.uRest, rest);
     gl.uniform2f(U.uCenter, cx, H - cyCss);
     gl.uniform2f(U.uRad, rx, ry);
     gl.uniform1f(U.uScale, sc);
@@ -1303,10 +1324,12 @@ function drawWhisper(S){
     lastProg = disp; dirty = false;
   }
 
+  let lastT = 0;
   function frame(now){
+    const dt = lastT ? Math.min(100, now - lastT) : 16.7; lastT = now;
     let diff = target - disp;
     diff = wrapN(diff + N / 2) - N / 2;
-    disp = reduce.matches ? target : wrapN(disp + diff * 0.12);
+    disp = reduce.matches ? target : wrapN(disp + diff * (1 - Math.exp(-dt / ease)));
     if (Math.abs(diff) < 0.0005) disp = target;
     updateText();
     if (!document.hidden && (!reduce.matches || dirty || Math.abs(disp - lastProg) > 1e-4)) render(now);
@@ -1321,7 +1344,10 @@ function drawWhisper(S){
   setTimeout(loadWhisper, 60);
 
   window.addEventListener('scroll', onScroll, { passive:true });
+  if ('onscrollend' in window) window.addEventListener('scrollend', recenter);
+  else { let idle; window.addEventListener('scroll', () => { clearTimeout(idle); idle = setTimeout(recenter, 200); }, { passive:true }); }
   window.addEventListener('resize', () => { sizeCanvas(); layout(false); });
+  fine.addEventListener && fine.addEventListener('change', () => layout(true));
   const scheme = window.matchMedia('(prefers-color-scheme: dark)');
   scheme.addEventListener && scheme.addEventListener('change', readPaper);
   reduce.addEventListener && reduce.addEventListener('change', () => { dirty = true; });
