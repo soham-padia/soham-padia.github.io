@@ -395,6 +395,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
     let y = window.scrollY;
     if (y < 0.5 * P) { window.scrollTo(0, y + P); return; }
     if (y >= 2.5 * P) { window.scrollTo(0, y - P); return; }
+    if (jump && Math.abs(y - jump.y) > 1) jump = null;
     target = wrapN(y / seg);
   }
 
@@ -426,10 +427,20 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
     if (!molding){ panel.style.filter = 'url(#mold)'; molding = true; }
   }
 
-  function updateText(){
+  // What's on show: plate a giving way to plate b, k of the way. Scrolling moves
+  // between neighbours; a click on the index morphs straight to its plate (jump).
+  let jump = null;
+  function stage(now){
+    if (jump){
+      const t = (now - jump.t0) / jump.dur;
+      if (t < 1) return { a: jump.a, b: jump.b, k: sm(Math.max(0, t)) };
+      jump = null;
+    }
     const fi = Math.floor(disp), fr = disp - fi;
-    const k = fr <= rest ? 0 : sm(Math.min(1, (fr - rest) / (1 - rest)));
-    const cur = wrapN(fi), nxt = wrapN(fi + 1);
+    return { a: wrapN(fi), b: wrapN(fi + 1), k: fr <= rest ? 0 : sm(Math.min(1, (fr - rest) / (1 - rest))) };
+  }
+
+  function updateText({ a: cur, b: nxt, k }){
     const still = reduce.matches;
     chapters.forEach((el, i) => {
       let a = 0;
@@ -448,15 +459,15 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
     buttons.forEach(b => b.setAttribute('aria-current', b.dataset.go === active ? 'true' : 'false'));
   }
 
+  // Land on plate i in the middle copy at once, and let the print morph there
+  // directly, as long as a scrolled step takes
   function go(i){
-    const cur = window.scrollY / seg;
-    const base = Math.floor(cur / N) * N;
-    let best = null;
-    for (const c of [base - N + i, base + i, base + N + i]) {
-      if (c < 0.5 * N || c >= 2.5 * N) continue;
-      if (best === null || Math.abs(c - cur) < Math.abs(best - cur)) best = c;
-    }
-    if (best !== null) window.scrollTo({ top: best * seg, behavior: reduce.matches ? 'auto' : 'smooth' });
+    const s = stage(performance.now());
+    const from = s.k < 0.5 ? s.a : s.b;
+    const y = (N + i) * seg;
+    window.scrollTo(0, y);
+    target = disp = i;
+    jump = from === i || reduce.matches ? null : { a: from, b: i, t0: performance.now(), dur: ease * 3.3, y };
   }
   buttons.forEach(b => b.addEventListener('click', () => go(+b.dataset.go)));
 
@@ -552,7 +563,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
 
   const FRAG = `
 precision highp float;
-uniform vec2 uRes; uniform float uTime; uniform float uProg; uniform float uRest;
+uniform vec2 uRes; uniform float uTime; uniform float uA; uniform float uB; uniform float uK;
 uniform vec2 uCenter; uniform vec2 uRad; uniform float uScale; uniform vec3 uPaper; uniform float uMode;
 uniform sampler2D uWhisper;
 vec2 whUV(vec2 p){ return (p + vec2(0.36, -0.02)) * 0.38 + 0.5; }
@@ -832,10 +843,9 @@ void main(){
     : 1.0 - smoothstep(0.36, 0.52, uv.y + (fbm(uv*vec2(3.0,1.5) + 4.0) - 0.5)*0.08);
   float t = uTime;
 
-  float fi = floor(uProg); float fr = uProg - fi;
-  float k = smoothstep(uRest, 1.0, fr);
+  float k = uK;
   float wet = sin(3.14159 * k);
-  float sa = mod(fi, 7.0), sb = mod(fi + 1.0, 7.0);
+  float sa = uA, sb = uB;
 
   vec2 wq = vec2(fbm(p*1.7 + vec2(0.0, t*0.02)), fbm(p*1.7 + vec2(5.2, 1.3) - t*0.015));
   float diss = mix(dissolveOf(sa), dissolveOf(sb), k);
@@ -971,7 +981,7 @@ void main(){
     const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    for (const n of ['uRes','uTime','uProg','uRest','uCenter','uRad','uScale','uPaper','uMode','uWhisper']) U[n] = gl.getUniformLocation(prog, n);
+    for (const n of ['uRes','uTime','uA','uB','uK','uCenter','uRad','uScale','uPaper','uMode','uWhisper']) U[n] = gl.getUniformLocation(prog, n);
     // a 1x1 blank texture until the drawing is ready
     const blank = gl.createTexture(); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, blank);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,255]));
@@ -1303,7 +1313,7 @@ function drawWhisper(S){
     dirty = true;
   }
 
-  function render(now){
+  function render(now, s){
     if (!prog) return;
     const W = canvas.width, H = canvas.height;
     const mobile = window.innerWidth <= 820;
@@ -1313,8 +1323,9 @@ function drawWhisper(S){
     gl.viewport(0, 0, W, H);
     gl.uniform2f(U.uRes, W, H);
     gl.uniform1f(U.uTime, reduce.matches ? 0 : now / 1000);
-    gl.uniform1f(U.uProg, disp);
-    gl.uniform1f(U.uRest, rest);
+    gl.uniform1f(U.uA, s.a);
+    gl.uniform1f(U.uB, s.b);
+    gl.uniform1f(U.uK, s.k);
     gl.uniform2f(U.uCenter, cx, H - cyCss);
     gl.uniform2f(U.uRad, rx, ry);
     gl.uniform1f(U.uScale, sc);
@@ -1331,8 +1342,9 @@ function drawWhisper(S){
     diff = wrapN(diff + N / 2) - N / 2;
     disp = reduce.matches ? target : wrapN(disp + diff * (1 - Math.exp(-dt / ease)));
     if (Math.abs(diff) < 0.0005) disp = target;
-    updateText();
-    if (!document.hidden && (!reduce.matches || dirty || Math.abs(disp - lastProg) > 1e-4)) render(now);
+    const s = stage(now);
+    updateText(s);
+    if (!document.hidden && (!reduce.matches || dirty || Math.abs(disp - lastProg) > 1e-4)) render(now, s);
     requestAnimationFrame(frame);
   }
 
