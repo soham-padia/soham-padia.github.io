@@ -41,6 +41,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="/img/proof.webp" fetchpriority="high">
+<noscript><style>.loader{ display:none; }</style></noscript>
+<script>
+// Simple view: the visitor's own choice, or else the system's reduce-motion setting
+try { var view = localStorage.getItem('view'); } catch (e) {}
+if (view ? view === 'simple' : matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('simple');
+</script>
 <style>
 :root{
   --paper:#122838;
@@ -117,9 +124,18 @@ a:hover{ text-decoration-color:var(--ink); }
   display:flex; justify-content:space-between; align-items:baseline; gap:1rem;
   font-size:.95em; pointer-events:none;
 }
-.top a{ pointer-events:auto; }
-.top .name{ font-style:italic; }
-.top-links{ display:flex; flex-wrap:wrap; gap:.4rem 1.5rem; }
+.top a, .top button{ pointer-events:auto; }
+.top .name{ font-style:italic; white-space:nowrap; }
+.top-links{ display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.4rem 1.5rem; }
+/* The view switch is a control, so it's italic like the plate index */
+.view{
+  -webkit-appearance:none;
+     -moz-appearance:none;
+          appearance:none; background:none; border:0; padding:0; cursor:pointer;
+  font:inherit; font-style:italic; color:var(--ink);
+  text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:.2em; text-decoration-color:var(--ink-soft);
+}
+.view:hover{ text-decoration-color:var(--ink); }
 
 .index{
   position:fixed; z-index:3; bottom:0; left:calc(var(--left) - .5rem);
@@ -204,9 +220,57 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
   .index{ left:.8rem; }
   .captions{ left:1.3rem; right:1.3rem; max-width:none; bottom:calc(env(safe-area-inset-bottom,0px) + 3.2rem); font-size:.82em; }
 }
+
+/* Loading screen: a small proof of Plate VII on the bare paper while the type and
+   the print get ready. The script lifts it. */
+.loader{
+  position:fixed; inset:0; z-index:10;
+  display:grid; place-content:center; justify-items:center;
+  background:var(--paper);
+  transition:opacity .9s ease;
+}
+.loader img{
+  display:block; width:min(240px, 52vw); height:auto;
+  opacity:0; transform:scale(1.04);
+  transition:opacity 1.2s ease-out, transform 1.8s cubic-bezier(.2,.6,.2,1);
+}
+.loader p{ margin:.2rem 0 0; font-style:italic; color:var(--ink-soft); opacity:0; transition:opacity .8s ease-out; }
+.loader .in{ opacity:1; transform:none; }
+.loader.quick{ transition-duration:.45s; }
+.loader.lifted{ opacity:0; pointer-events:none; }
+html.simple .loader img, html.simple .loader p{ transition:none; transform:none; }
+html.simple .loader{ transition-duration:.25s; }
+
+/* Simple view: no stage. The chapters run down a sheet of paper like a book of
+   toned cyanotype plates, each print beside its text. */
+:root.simple{ --paper:#F3F0E8; --ink:#1D3344; --ink-soft:#4E6575; --code-bg:rgba(29,51,68,.07); scroll-snap-type:none; }
+.plate-print{ display:none; }
+.simple .print, .simple .print-fallback, .simple .track, .simple .index, .simple .captions, .simple .cue, .simple .loop-note{ display:none; }
+.simple .panel, .simple .top{ text-shadow:none; }
+.simple .top{ position:absolute; }
+.simple .panel{ position:static; inset:auto; width:auto; display:block; max-width:78rem; margin:0 auto; padding:9rem var(--left) 5rem; pointer-events:auto; }
+.simple .ch{
+  opacity:1; display:grid; grid-template-columns:minmax(0, 31rem) minmax(0, 1fr);
+  -moz-column-gap:clamp(2.5rem, 7vw, 7rem);
+       column-gap:clamp(2.5rem, 7vw, 7rem); align-items:center; margin:0 0 clamp(6rem, 14vh, 10rem);
+}
+.simple .plate-print{ display:block; margin:0; }
+.simple .plate-print img{ display:block; width:100%; height:auto; aspect-ratio:1; }
+.simple .plate-print figcaption{ margin-top:.5rem; font-style:italic; font-size:.9em; color:var(--ink-soft); }
+.simple .write-btn{ background:none; border-color:var(--ink-soft); }
+@media (max-width: 820px){
+  .simple .panel{ padding:5.5rem 1.3rem 3rem; }
+  .simple .ch{ grid-template-columns:minmax(0, 1fr); margin-bottom:5rem; }
+  .simple .plate-print{ order:-1; margin-bottom:1.6rem; }
+}
 </style>
 </head>
 <body>
+
+<div class="loader" id="loader" aria-hidden="true">
+  <img src="/img/proof.webp" alt="" width="400" height="400" fetchpriority="high" onload="this.classList.add('in')">
+  <p>Great things take time.</p>
+</div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <filter id="mold" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
@@ -228,6 +292,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
     <a href="mailto:padia.so@northeastern.edu">Email</a>
     <a href="https://github.com/soham-padia">GitHub</a>
     <a href="https://linkedin.com/in/soham-padia">LinkedIn</a>
+    <button type="button" class="view" id="view">Simple view</button>
   </span>
 </header>
 
@@ -291,7 +356,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
     </ul>
     <p>Or say something without saying who you are.</p>
     <button type="button" class="write-btn" id="openNote">Write to me anonymously</button>
-    <p class="small" style="margin-top:1.6em">Keep scrolling and the print starts over.</p>
+    <p class="small loop-note" style="margin-top:1.6em">Keep scrolling and the print starts over.</p>
   </section>
 </main>
 
@@ -349,6 +414,12 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
 (function(){
   const N = 7;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  // Simple view (calm): the chapters as a book of still, toned prints on paper, with
+  // nothing pinned, moving or blurring (the book, below). The script in <head> picks
+  // the starting view.
+  const root = document.documentElement;
+  let calm = root.classList.contains('simple');
+  let inBook = false;   // laid out as the book: no stage, loop, snapping or canvas
   const track = document.getElementById('track');
   const chapters = [...document.querySelectorAll('.ch')];
   const caps = {}; document.querySelectorAll('.cap').forEach(c => { caps[c.dataset.i] = c; });
@@ -367,6 +438,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
   const sm = a => a * a * (3 - 2 * a);
 
   function layout(force){
+    if (inBook) return;
     const w = window.innerWidth, h = window.innerHeight;
     if (!force && w === lastW && Math.abs(h - lastH) < 160) return;
     const prog = seg > 1 ? wrapN(window.scrollY / seg) : 0;
@@ -386,12 +458,14 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
   // At rest, step back into the middle copy, which looks the same, so the jumps
   // in onScroll never land mid-gesture
   function recenter(){
+    if (inBook) return;
     const y = window.scrollY;
     if (y < P) window.scrollTo(0, y + P);
     else if (y >= 2 * P) window.scrollTo(0, y - P);
   }
 
   function onScroll(){
+    if (inBook) return;
     let y = window.scrollY;
     if (y < 0.5 * P) { window.scrollTo(0, y + P); return; }
     if (y >= 2.5 * P) { window.scrollTo(0, y - P); return; }
@@ -407,7 +481,6 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
   let molding = false, lastM = -1;
 
   function setMold(m){
-    if (reduce.matches) m = 0;
     if (m < 0.004){
       if (molding){ panel.style.filter = ''; molding = false; }
       return;
@@ -437,15 +510,15 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
       jump = null;
     }
     const fi = Math.floor(disp), fr = disp - fi;
-    return { a: wrapN(fi), b: wrapN(fi + 1), k: fr <= rest ? 0 : sm(Math.min(1, (fr - rest) / (1 - rest))) };
+    const k = fr <= rest ? 0 : sm(Math.min(1, (fr - rest) / (1 - rest)));
+    return { a: wrapN(fi), b: wrapN(fi + 1), k };
   }
 
   function updateText({ a: cur, b: nxt, k }){
-    const still = reduce.matches;
     chapters.forEach((el, i) => {
       let a = 0;
-      if (i === cur) a = still ? (k < 0.5 ? 1 : 0) : 1 - k;
-      if (i === nxt) a = still ? (k < 0.5 ? 0 : 1) : Math.max(a, k);
+      if (i === cur) a = 1 - k;
+      if (i === nxt) a = Math.max(a, k);
       el.style.opacity = a.toFixed(3);
       el.style.transform = 'none';
       const on = a > 0.5;
@@ -467,7 +540,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
     const y = (N + i) * seg;
     window.scrollTo(0, y);
     target = disp = i;
-    jump = from === i || reduce.matches ? null : { a: from, b: i, t0: performance.now(), dur: ease * 3.3, y };
+    jump = from === i ? null : { a: from, b: i, t0: performance.now(), dur: ease * 3.3, y };
   }
   buttons.forEach(b => b.addEventListener('click', () => go(+b.dataset.go)));
 
@@ -563,8 +636,8 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
 
   const FRAG = `
 precision highp float;
-uniform vec2 uRes; uniform float uTime; uniform float uA; uniform float uB; uniform float uK;
-uniform vec2 uCenter; uniform vec2 uRad; uniform float uScale; uniform vec3 uPaper; uniform float uMode;
+uniform vec2 uRes; uniform float uTime; uniform float uA; uniform float uB; uniform float uK; uniform float uLook; uniform float uDeckle;
+uniform vec2 uCenter; uniform vec2 uRad; uniform float uScale; uniform vec3 uPaper; uniform float uMode;   // uPaper: bare paper beyond uDeckle
 uniform sampler2D uWhisper;
 vec2 whUV(vec2 p){ return (p + vec2(0.36, -0.02)) * 0.38 + 0.5; }
 
@@ -838,12 +911,14 @@ void main(){
   vec2 fc = gl_FragCoord.xy;
   vec2 uv = fc / uRes;
   vec2 p = (fc - uCenter) / uScale;
-  float legib = (uMode < 0.5)
+  // uMode 0 desktop, 1 phone (both keep the text's side dark), 2 the plate alone
+  float legib = (uMode > 1.5) ? 0.0 : (uMode < 0.5)
     ? 1.0 - smoothstep(0.30, 0.52, uv.x + (fbm(uv*vec2(1.5,3.0) + 4.0) - 0.5)*0.14)
     : 1.0 - smoothstep(0.36, 0.52, uv.y + (fbm(uv*vec2(3.0,1.5) + 4.0) - 0.5)*0.08);
   float t = uTime;
 
   float k = uK;
+  float dry = step(0.5, uLook);
   float wet = sin(3.14159 * k);
   float sa = uA, sb = uB;
 
@@ -875,21 +950,23 @@ void main(){
   vec3 rust = vec3(0.62, 0.44, 0.24);
   vec3 white = vec3(0.92, 0.94, 0.94);
 
-  vec3 col = mix(deep, teal, smoothstep(0.3, 0.7, w2));
+  // dry (simple view): an even field without the wash's sand, tide lines and rust
+  vec3 col = mix(deep, teal, smoothstep(0.3, 0.7, w2) * (1.0 - 0.5*dry));
   float sandAmt = smoothstep(0.38, 0.66, w + 0.25*(w2 - 0.5) - p.y*0.14) * (1.0 - legib*0.88);
+  sandAmt *= 1.0 - dry;
   col = mix(col, mix(sand, rust, smoothstep(0.6, 0.9, w2)*0.6), sandAmt*0.85);
   col = mix(col, navy, smoothstep(0.2, 1.0, p.y) * 0.35 * (1.0 - sandAmt));
 
   float near = exp(-max(d, 0.0) * 12.0);
   col = mix(col, navy, near * 0.72 * (1.0 - sandAmt*0.45));
   float ringL = smoothstep(0.018, 0.0, abs(d - 0.05 - (w2 - 0.5)*0.05)) * smoothstep(0.45, 0.65, fbm(p*4.0 + 9.0));
-  col = mix(col, rust, ringL * 0.4);
+  col = mix(col, rust, ringL * 0.4 * (1.0 - dry));
   col = mix(col, mix(navy, deep, smoothstep(0.3, 0.8, w)), legib * 0.5);
-  float tide = smoothstep(0.012, 0.0, abs(w - 0.56));
+  float tide = smoothstep(0.012, 0.0, abs(w - 0.56)) * (1.0 - dry);
   col = mix(col, navy, tide * 0.5);
-  float tideP = smoothstep(0.008, 0.0, abs(w - 0.44)) * smoothstep(0.4, 0.6, w2);
+  float tideP = smoothstep(0.008, 0.0, abs(w - 0.44)) * smoothstep(0.4, 0.6, w2) * (1.0 - dry);
   col = mix(col, mix(teal, sand, 0.4), tideP * 0.45);
-  float tideD = smoothstep(0.01, 0.0, abs(w2 - 0.62)) * legib;
+  float tideD = smoothstep(0.01, 0.0, abs(w2 - 0.62)) * legib * (1.0 - dry);
   col = mix(col, navy * 0.7, tideD * 0.35);
 
   // II: the pond below the waterline is marbled
@@ -955,11 +1032,31 @@ void main(){
   col *= 1.0 - dot(vg, vg) * 0.35;
   vec3 outc = col;
   outc *= 0.975 + 0.025 * hash(fc + 3.7);
+  // uLook (simple view's prints): a cyanotype toned in tannin has one tone, brown-black
+  // where light reached the paper and cream where the plate shaded it, so the print's
+  // lightness maps onto it.
+  if (uLook > 0.5){
+    float Y = smoothstep(0.12, 0.86, dot(outc, vec3(0.3, 0.55, 0.15)));
+    vec3 c0 = vec3(0.075, 0.068, 0.07), c1 = vec3(0.21, 0.18, 0.17), c2 = vec3(0.62, 0.56, 0.47), c3 = vec3(0.94, 0.90, 0.81);
+    outc = Y < 0.45 ? mix(c0, c1, Y / 0.45) : Y < 0.78 ? mix(c1, c2, (Y - 0.45) / 0.33) : mix(c2, c3, (Y - 0.78) / 0.22);
+    // the paper's tooth and fibres
+    outc *= 1.0 + (fbm(fc * 0.5 + 7.0) - 0.5) * 0.08 + (fbm(vec2(fc.x * 0.04, fc.y * 0.5) + 3.0) - 0.5) * 0.05;
+    // uDeckle: the coating's brushed edge, about this many pixels in, bare paper beyond.
+    // Each side has its own brush marks: a slow wander and ragged bristle ends.
+    if (uDeckle > 0.0){
+      vec2 m = min(fc, uRes - fc);
+      vec2 n = vec2(fbm(vec2(fc.y * 0.005, 1.0)), fbm(vec2(fc.x * 0.005, 5.0))) - 0.5
+             + (vec2(fbm(vec2(fc.y * 0.03, m.x * 0.01 + 3.0)), fbm(vec2(fc.x * 0.03, m.y * 0.01 + 8.0))) - 0.5) * 0.35
+             + (vec2(hash(vec2(floor(fc.y * 0.5), 2.0)), hash(vec2(floor(fc.x * 0.5), 7.0))) - 0.5) * 0.06;
+      vec2 cv = smoothstep(vec2(-2.0), vec2(2.0), m - uDeckle * (1.0 + 1.1 * n));
+      outc = mix(uPaper, outc, min(cv.x, cv.y));
+    }
+  }
   gl_FragColor = vec4(outc, 1.0);
 }`;
   const VERT = `attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }`;
 
-  let prog = null, U = {}, paper = [0.97, 0.965, 0.945], dirty = true, lastProg = -1;
+  let prog = null, U = {}, paper = [0.97, 0.965, 0.945], dirty = true;
 
   function hexToRgb(h){
     h = h.trim().replace('#','');
@@ -981,7 +1078,7 @@ void main(){
     const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    for (const n of ['uRes','uTime','uA','uB','uK','uCenter','uRad','uScale','uPaper','uMode','uWhisper']) U[n] = gl.getUniformLocation(prog, n);
+    for (const n of ['uRes','uTime','uA','uB','uK','uLook','uDeckle','uCenter','uRad','uScale','uPaper','uMode','uWhisper']) U[n] = gl.getUniformLocation(prog, n);
     // a 1x1 blank texture until the drawing is ready
     const blank = gl.createTexture(); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, blank);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,255]));
@@ -1322,38 +1419,64 @@ function drawWhisper(S){
     else { cx = W*0.74; cyCss = H*0.5; rx = W*0.32; ry = H*0.5; sc = Math.min(W*0.26, H*0.42); }
     gl.viewport(0, 0, W, H);
     gl.uniform2f(U.uRes, W, H);
-    gl.uniform1f(U.uTime, reduce.matches ? 0 : now / 1000);
+    gl.uniform1f(U.uTime, now / 1000);
+    gl.uniform1f(U.uLook, 0);     // the book's prints set these
+    gl.uniform1f(U.uDeckle, 0);
     gl.uniform1f(U.uA, s.a);
     gl.uniform1f(U.uB, s.b);
     gl.uniform1f(U.uK, s.k);
     gl.uniform2f(U.uCenter, cx, H - cyCss);
     gl.uniform2f(U.uRad, rx, ry);
     gl.uniform1f(U.uScale, sc);
-    gl.uniform3f(U.uPaper, paper[0], paper[1], paper[2]);
     gl.uniform1f(U.uMode, mobile ? 1 : 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    lastProg = disp; dirty = false;
+    dirty = false;
   }
 
   let lastT = 0;
   function frame(now){
+    if (inBook) { requestAnimationFrame(frame); return; }
     const dt = lastT ? Math.min(100, now - lastT) : 16.7; lastT = now;
     let diff = target - disp;
     diff = wrapN(diff + N / 2) - N / 2;
-    disp = reduce.matches ? target : wrapN(disp + diff * (1 - Math.exp(-dt / ease)));
+    disp = wrapN(disp + diff * (1 - Math.exp(-dt / ease)));
     if (Math.abs(diff) < 0.0005) disp = target;
     const s = stage(now);
     updateText(s);
-    if (!document.hidden && (!reduce.matches || dirty || Math.abs(disp - lastProg) > 1e-4)) render(now, s);
+    if (!document.hidden) render(now, s);
     requestAnimationFrame(frame);
   }
+
+  // ---------- Loading screen ----------
+  // Lifts once the type has loaded and the print has drawn, Plate V's drawing
+  // included (making it stalls the page). On the first page of a visit the line
+  // also gets a second to be read.
+  const loader = document.getElementById('loader');
+  let printed;
+  const printReady = new Promise(r => { printed = r; });
+  let seen = false;
+  try { seen = sessionStorage.getItem('printed') === '1'; sessionStorage.setItem('printed', '1'); } catch (e) {}
+  if (seen) loader.classList.add('quick');
+  const type = document.fonts
+    ? Promise.all(['1em "EB Garamond"', 'italic 1em "EB Garamond"'].map(f => document.fonts.load(f)))
+    : Promise.resolve();
+  const read = type.then(() => {
+    loader.querySelector('p').classList.add('in');
+    return new Promise(r => setTimeout(r, seen || calm ? 0 : 1000));
+  });
+  Promise.race([Promise.all([read, printReady]), new Promise(r => setTimeout(r, 4000))])
+    .catch(() => {})
+    .then(() => {
+      loader.classList.add('lifted');
+      setTimeout(() => loader.remove(), 1000);
+    });
 
   const ok = initGL();
   if (!ok){ canvas.style.display = 'none'; document.getElementById('fallback').style.display = 'block'; }
   readPaper();
   sizeCanvas();
   layout(true);
-  setTimeout(loadWhisper, 60);
+  setTimeout(() => { loadWhisper(); requestAnimationFrame(() => requestAnimationFrame(printed)); }, 60);
 
   window.addEventListener('scroll', onScroll, { passive:true });
   if ('onscrollend' in window) window.addEventListener('scrollend', recenter);
@@ -1362,7 +1485,84 @@ function drawWhisper(S){
   fine.addEventListener && fine.addEventListener('change', () => layout(true));
   const scheme = window.matchMedia('(prefers-color-scheme: dark)');
   scheme.addEventListener && scheme.addEventListener('change', readPaper);
-  reduce.addEventListener && reduce.addEventListener('change', () => { dirty = true; });
+
+  // ---------- The book ----------
+  // Each chapter's text goes in a column beside its plate, printed once as a still
+  // cyanotype on paper when it comes near the screen.
+  let printsMade = false;
+  function makePrints(){
+    if (printsMade) return;
+    printsMade = true;
+    const seen = new IntersectionObserver(entries => entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      seen.unobserve(e.target);
+      printReady.then(() => printPlate(+e.target.dataset.i, e.target.querySelector('img')));
+    }), { rootMargin: '800px 0px' });
+    chapters.forEach((el, i) => {
+      const text = document.createElement('div');
+      while (el.firstChild) text.appendChild(el.firstChild);
+      const fig = document.createElement('figure');
+      fig.className = 'plate-print'; fig.dataset.i = i;
+      fig.innerHTML = '<img alt="" width="1" height="1"><figcaption></figcaption>';
+      fig.querySelector('figcaption').textContent = caps[i] ? caps[i].textContent : '';
+      el.append(text, fig);
+      if (prog) seen.observe(fig);
+    });
+  }
+  function printPlate(i, img){
+    const S = Math.min(1100, Math.round(img.clientWidth * Math.min(window.devicePixelRatio || 1, 2))) || 800;
+    const w = canvas.width, h = canvas.height;
+    canvas.width = canvas.height = S;
+    gl.viewport(0, 0, S, S);
+    gl.uniform2f(U.uRes, S, S);
+    gl.uniform1f(U.uTime, 0);
+    gl.uniform1f(U.uA, i); gl.uniform1f(U.uB, (i + 1) % N); gl.uniform1f(U.uK, 0);
+    gl.uniform2f(U.uCenter, S / 2, S / 2);
+    gl.uniform1f(U.uScale, S * 0.36);
+    gl.uniform1f(U.uMode, 2);
+    gl.uniform1f(U.uLook, 1);
+    gl.uniform1f(U.uDeckle, S * 0.07);
+    readPaper();   // the print's paper is the page
+    gl.uniform3f(U.uPaper, paper[0], paper[1], paper[2]);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    img.src = canvas.toDataURL('image/jpeg', 0.9);
+    canvas.width = w; canvas.height = h; dirty = true;
+  }
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  function syncBook(){
+    const on = calm;
+    if (on === inBook) return;
+    inBook = on;
+    themeColor.content = on ? '#F3F0E8' : '#122838';
+    if (on){
+      makePrints();
+      chapters.forEach(el => { el.inert = false; el.removeAttribute('aria-hidden'); el.style.opacity = ''; });
+      window.scrollTo(0, 0);
+    } else {
+      window.scrollTo(0, 0);
+      seg = 1; target = disp = 0;
+      layout(true);
+    }
+  }
+
+  // ---------- Simple view switch ----------
+  const viewBtn = document.getElementById('view');
+  function setView(simple, save){
+    calm = simple;
+    root.classList.toggle('simple', simple);
+    viewBtn.textContent = simple ? 'Full view' : 'Simple view';
+    if (save) try { localStorage.setItem('view', simple ? 'simple' : 'full'); } catch (e) {}
+    jump = null; disp = target; dirty = true;
+    syncBook();
+  }
+  setView(calm);
+  viewBtn.addEventListener('click', () => setView(!calm, true));
+  // Until the visitor picks, follow the system setting
+  reduce.addEventListener && reduce.addEventListener('change', () => {
+    let chosen = null;
+    try { chosen = localStorage.getItem('view'); } catch (e) {}
+    if (!chosen) setView(reduce.matches);
+  });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { dirty = true; });
 
   requestAnimationFrame(frame);
