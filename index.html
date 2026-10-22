@@ -126,12 +126,14 @@ a:hover{ text-decoration-color:var(--ink); }
 }
 .top a, .top button{ pointer-events:auto; }
 .top .name{ font-style:italic; white-space:nowrap; }
+/* The view switch keeps the corner; the name fades in beside it after the first chapter */
+.top-start{ display:flex; align-items:baseline; gap:.4rem 1.5rem; }
 .top-links{ display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.4rem 1.5rem; }
 /* The view switch is a control, so it's italic like the plate index */
 .view{
   -webkit-appearance:none;
      -moz-appearance:none;
-          appearance:none; background:none; border:0; padding:0; cursor:pointer;
+          appearance:none; background:none; border:0; padding:0; cursor:pointer; white-space:nowrap;
   font:inherit; font-style:italic; color:var(--ink);
   text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:.2em; text-decoration-color:var(--ink-soft);
 }
@@ -217,6 +219,7 @@ dialog.note::backdrop{ background:rgba(6,16,28,.58); backdrop-filter:blur(3px); 
   .small, .cue{ display:none; }
   .top{ left:1.3rem; right:1.3rem; padding-top:calc(env(safe-area-inset-top,0px) + .9rem); font-size:.88em; }
   .top-links{ gap:.3rem 1rem; }
+  .top-start{ flex-direction:column; gap:.15rem; }
   .index{ left:.8rem; }
   .captions{ left:1.3rem; right:1.3rem; max-width:none; bottom:calc(env(safe-area-inset-bottom,0px) + 3.2rem); font-size:.82em; }
 }
@@ -286,13 +289,15 @@ html.simple .loader{ transition-duration:.25s; }
 <div class="print-fallback" id="fallback" aria-hidden="true"></div>
 
 <header class="top">
-  <span class="name" id="topName" style="opacity:0">Soham Padia</span>
+  <span class="top-start">
+    <button type="button" class="view" id="view">Simple view</button>
+    <span class="name" id="topName" style="opacity:0">Soham Padia</span>
+  </span>
   <span class="top-links">
     <a href="/blog">Notes</a>
     <a href="mailto:padia.so@northeastern.edu">Email</a>
     <a href="https://github.com/soham-padia">GitHub</a>
     <a href="https://linkedin.com/in/soham-padia">LinkedIn</a>
-    <button type="button" class="view" id="view">Simple view</button>
   </span>
 </header>
 
