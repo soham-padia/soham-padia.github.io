@@ -334,6 +334,7 @@ html.simple .loader{ transition-duration:.25s; }
     <p>whisperers finds those strings on purpose. Give it a direction, attention heads, an SAE latent, a LoRA or a function vector, and it searches for a short prefix that pushes the model toward it.</p>
     <p class="specimen"><code>pip install whisperers</code></p>
     <div class="links">
+      <a href="/blog/model-whisperers">Read my write-up</a>
       <a href="https://pypi.org/project/whisperers/">View on PyPI</a>
       <a href="https://sohampadianeu-whisperers-dict.static.hf.space/index.html">Browse the prefixes it found</a>
     </div>
@@ -453,6 +454,19 @@ html.simple .loader{ transition-duration:.25s; }
     }));
     window.scrollTo(0, P + prog * seg);
     target = disp = prog;
+    fitText();
+  }
+
+  // On a phone the text sits under the plate. A chapter too tall for the room above
+  // the captions rises into the plate's space instead of running over them.
+  function fitText(){
+    const phone = window.innerWidth <= 820 && !inBook;
+    const room = Math.min(panel.clientHeight, captionBox.getBoundingClientRect().top - panel.getBoundingClientRect().top - 12);
+    chapters.forEach(el => {
+      el.style.marginTop = '';
+      const over = phone ? el.offsetHeight - room : 0;
+      if (over > 0) el.style.marginTop = -over + 'px';
+    });
   }
 
   // At rest, step back into the middle copy, which looks the same, so the jumps
@@ -478,6 +492,7 @@ html.simple .loader{ transition-duration:.25s; }
   const moldMix = document.getElementById('moldMix');
   const moldGoo = document.getElementById('moldGoo');
   const panel = document.getElementById('panel');
+  const captionBox = document.querySelector('.captions');
   let molding = false, lastM = -1;
 
   function setMold(m){
@@ -1460,6 +1475,7 @@ function drawWhisper(S){
   const type = document.fonts
     ? Promise.all(['1em "EB Garamond"', 'italic 1em "EB Garamond"'].map(f => document.fonts.load(f)))
     : Promise.resolve();
+  type.then(fitText, () => {});
   const read = type.then(() => {
     loader.querySelector('p').classList.add('in');
     return new Promise(r => setTimeout(r, seen || calm ? 0 : 1000));
@@ -1481,7 +1497,7 @@ function drawWhisper(S){
   window.addEventListener('scroll', onScroll, { passive:true });
   if ('onscrollend' in window) window.addEventListener('scrollend', recenter);
   else { let idle; window.addEventListener('scroll', () => { clearTimeout(idle); idle = setTimeout(recenter, 200); }, { passive:true }); }
-  window.addEventListener('resize', () => { sizeCanvas(); layout(false); });
+  window.addEventListener('resize', () => { sizeCanvas(); layout(false); fitText(); });
   fine.addEventListener && fine.addEventListener('change', () => layout(true));
   const scheme = window.matchMedia('(prefers-color-scheme: dark)');
   scheme.addEventListener && scheme.addEventListener('change', readPaper);
@@ -1536,6 +1552,7 @@ function drawWhisper(S){
     themeColor.content = on ? '#F3F0E8' : '#122838';
     if (on){
       makePrints();
+      fitText();
       chapters.forEach(el => { el.inert = false; el.removeAttribute('aria-hidden'); el.style.opacity = ''; });
       window.scrollTo(0, 0);
     } else {
