@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GLU Gate Lab — Soham Padia</title>
+<meta name="description" content="An interactive lab for the 22 feed-forward gates of my stairs study: each gate's shape and slope, a live layer of hidden units, and how each one did in training.">
+<meta name="author" content="Soham Padia">
+<meta name="theme-color" content="#F3F0E8">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/icon/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/img/icon/icon-192.png">
+<link rel="apple-touch-icon" href="/img/icon/apple-touch-icon.png">
+<link rel="canonical" href="https://soham-padia.github.io/lab/glu-gates/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Soham Padia">
+<meta property="og:url" content="https://soham-padia.github.io/lab/glu-gates/">
+<meta property="og:title" content="GLU Gate Lab">
+<meta property="og:description" content="22 feed-forward gates, their shapes and slopes, a live layer of hidden units, and how each did in training.">
+<meta property="og:image" content="https://soham-padia.github.io/img/share/plate-1.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Plate I. A neuron, or a pressed specimen. Printed in cyanotype.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GLU Gate Lab">
+<meta name="twitter:description" content="22 feed-forward gates, their shapes and slopes, a live layer of hidden units, and how each did in training.">
+<meta name="twitter:image" content="https://soham-padia.github.io/img/share/plate-1.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html { background: #F3F0E8; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+img { max-width: 100%; }
+[hidden]:not([hidden=until-found i]) { display: none !important; }
+</style>
+<style>
+/* Layout: a bench. Gate picker on top; the selected gate's curve and slope beside its controls; below, one live layer of 64 hidden units, then the neighbour rule for the life gates. Type, paper and ink are the site's (Notes); the chart colours are cyanotype blue, rust and teal. */
+:root {
+  --bg: #F3F0E8; --surface: #F9F7F2; --ink: #1D3344; --ink-2: #4E6575; --muted: #6B7E8A;
+  --grid: #E4DFD3; --axis: #C4BCAC; --line: rgba(29,51,68,.13); --chip: #E9E4D8; --ref: #A39C8C;
+  --s1: #1F4E8C; --s2: #B0602A; --s3: #2F7F78; --s1-wash: rgba(31,78,140,.10);
+  --off-bg: #F3E7C9; --off-line: #D9BE82; --off-ink: #5A4520;
+  --f-display: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --f-body: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 17.5px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+.page {
+  max-width: 1160px; margin: 0 auto; display: grid; gap: 40px;
+  padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.page > * { min-width: 0; }
+code, .mono { font-family: var(--f-mono); font-size: .92em; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(40px, 6vw, 60px); font-weight: 400; letter-spacing: -.01em; line-height: 1.04; }
+h2 { font-size: 27px; font-weight: 500; }
+h3 { font-size: 18px; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font-style: italic; color: var(--muted); }
+.lede { color: var(--ink-2); max-width: 68ch; }
+header { display: grid; gap: 18px; }
+header .lede { font-size: 19px; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 12px 14px; overflow-x: auto; }
+.flow svg { display: block; min-width: 640px; width: 100%; height: auto; }
+.flow .box { fill: var(--bg); stroke: var(--axis); stroke-width: 1; }
+.flow .box.gate { fill: var(--s1-wash); stroke: var(--s1); stroke-width: 1.5; }
+.flow .wire { stroke: var(--ink-2); stroke-width: 1.5; fill: none; }
+.flow .head { fill: var(--ink-2); }
+.flow text { font-family: var(--f-mono); font-size: 13px; fill: var(--ink); }
+.flow text.sub { font-family: var(--f-body); font-size: 14px; font-style: italic; fill: var(--muted); }
+.picker { display: grid; gap: 10px; }
+.prow { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 10px; align-items: start; }
+.prow > span { font-style: italic; color: var(--muted); padding-top: 3px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { font-family: var(--f-mono); font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 3px; padding: 4px 11px; cursor: pointer; }
+.chips button:hover { border-color: var(--axis); color: var(--ink); }
+.chips button[aria-pressed="true"] { background: var(--s1); border-color: var(--s1); color: #fff; }
+@media (max-width: 620px) { .prow { grid-template-columns: minmax(0, 1fr); gap: 4px; } .prow > span { padding-top: 0; } }
+button:focus-visible, input:focus-visible, summary:focus-visible, [tabindex]:focus-visible, canvas:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+.gatehead { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px 36px; align-items: start; }
+@media (max-width: 860px) { .gatehead { grid-template-columns: minmax(0, 1fr); } }
+.gatehead .what { display: grid; gap: 10px; }
+.gatehead .name { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.gatehead .name h2 { font-family: var(--f-mono); font-weight: 500; font-size: 26px; }
+.tag { font-size: 15px; font-style: italic; color: var(--muted); }
+.formula { font-family: var(--f-mono); font-size: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 9px 12px; overflow-x: auto; white-space: pre; }
+.gatehead .text { color: var(--ink-2); max-width: 64ch; }
+.study { display: grid; gap: 10px; }
+.study h3 { font-size: 16px; font-style: italic; color: var(--muted); font-family: var(--f-body); font-weight: 400; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 18px; margin: 0; }
+.facts div { min-width: 0; }
+.facts dt { font-size: 14.5px; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 500; font-variant-numeric: lining-nums tabular-nums; }
+@media (max-width: 460px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.checks { display: grid; gap: 6px; font-size: 16px; color: var(--ink-2); }
+.checks div { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 8px; }
+.checks b { font-family: var(--f-mono); font-weight: 500; color: var(--ink); }
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.figrow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.readout { font-family: var(--f-mono); font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14.5px; color: var(--ink-2); }
+.key { display: inline-flex; align-items: center; gap: 6px; }
+.charts { display: grid; gap: 14px; }
+.caption { font-size: 14.5px; color: var(--muted); max-width: 80ch; }
+.controls { display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 16px; }
+.ctl { display: grid; gap: 4px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: 15.5px; color: var(--ink-2); }
+.ctl label output { font-family: var(--f-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.ctl small { font-size: 14px; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--s1); }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 15.5px; color: var(--ink-2); }
+.toggle input { accent-color: var(--s1); width: 16px; height: 16px; }
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn { font: inherit; font-size: 15px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 3px; padding: 5px 10px; cursor: pointer; }
+.btn:hover { border-color: var(--axis); }
+.btn.primary { background: var(--s1); border-color: var(--s1); color: #fff; }
+.ctlgroup { display: grid; gap: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.ctlgroup h3 { font-size: 16px; font-style: italic; color: var(--muted); font-family: var(--f-body); font-weight: 400; }
+section { display: grid; gap: 12px; }
+.livebar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.livebar .ctl { min-width: 12rem; flex: 1 1 12rem; max-width: 18rem; }
+.counters { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 15.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.counters b { color: var(--ink); font-weight: 650; }
+canvas { display: block; width: 100%; touch-action: none; }
+.lifegrid { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 760px) { .lifegrid { grid-template-columns: minmax(0, 1fr); } }
+.note { font-size: 17px; color: var(--ink-2); max-width: 70ch; }
+.jump { display: flex; gap: 6px; flex-wrap: wrap; }
+details { font-size: 15.5px; color: var(--ink-2); }
+details summary { cursor: pointer; color: var(--ink); }
+.vt { overflow-x: auto; max-height: 18rem; margin-top: 8px; }
+.vt table { border-collapse: collapse; font-family: var(--f-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.vt th, .vt td { padding: 3px 10px; text-align: right; border-bottom: 1px solid var(--grid); }
+.vt th { color: var(--muted); font-weight: 500; position: sticky; top: 0; background: var(--surface); }
+svg text { font-family: var(--f-body); font-size: 13px; fill: var(--muted); font-variant-numeric: lining-nums tabular-nums; }
+svg text.lab { fill: var(--ink-2); font-size: 14px; font-style: italic; }
+.gridline { stroke: var(--grid); stroke-width: 1; }
+.zero { stroke: var(--axis); stroke-width: 1; }
+#tip { position: fixed; z-index: 30; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 3px; padding: 8px 10px; font-size: 15px; line-height: 1.45; box-shadow: 0 6px 22px rgba(0,0,0,.14); max-width: 320px; font-variant-numeric: lining-nums tabular-nums; }
+#tip strong { font-weight: 700; }
+#tip span { color: var(--ink-2); }
+.site-top { display: flex; justify-content: space-between; align-items: baseline; gap: .4rem 1rem; flex-wrap: wrap; padding: 1.5rem clamp(1.5rem, 4vw, 4rem) 0 clamp(1.5rem, 6vw, 6rem); font-size: 18px; }
+.site-top a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: var(--muted); }
+.site-top a:hover, .site-top [aria-current="page"] { text-decoration-color: currentColor; }
+.site-top .name { font-style: italic; text-decoration: none; }
+.site-links { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; }
+@media (max-width: 820px) { .site-top { padding: .9rem 1.3rem 0; font-size: 16px; } .site-links { gap: .3rem 1rem; } }
+.page a { color: var(--ink); text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: var(--muted); }
+footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+</head>
+<body>
+<nav class="site-top" aria-label="Site">
+  <a class="name" href="/">Soham Padia</a>
+  <span class="site-links">
+    <a href="/blog">Notes</a>
+    <a href="/lab/glu-gates/" aria-current="page">Lab</a>
+    <a href="mailto:padia.so@northeastern.edu">Email</a>
+    <a href="https://github.com/soham-padia">GitHub</a>
+    <a href="https://linkedin.com/in/soham-padia">LinkedIn</a>
+  </span>
+</nav>
+<div class="page">
+  <header>
+    <p class="eyebrow">Lab · from the stairs study</p>
+    <h1>GLU Gate Lab</h1>
+    <p class="lede">A transformer's feed-forward layer has a gate: a small function that decides how much of each hidden unit gets through. Most models today use SwiGLU. I trained a small model (10 layers, d_model 512) with 21 other gates: staircases meant to make the layer cheaper to quantize or skip, and a few that borrow the rules of Conway's Game of Life. Five seeds each, 172 runs in all. On loss nothing beat SwiGLU, and putting the exact Game of Life rule on top of it tied.</p>
+    <p class="lede">Every gate in the study sits in the same spot of the feed-forward block. The layer computes two projections of the token, bends one of them with a gate, multiplies, and projects back. Pick a gate to see its shape, the slope training sees, and what it does to a live layer of hidden units.</p>
+    <div class="flow" role="img" aria-label="Feed-forward block: x goes through W1 to a and through W2 to b; a passes the gate to give g, b passes the value branch to give u; h equals g times u, and W3 maps h back to the model width.">
+      <svg viewBox="0 0 760 150" id="flow">
+        <defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z" class="head"/></marker></defs>
+        <text x="14" y="80">x</text>
+        <path class="wire" d="M30 75 H58 V40 H86" marker-end="url(#arr)"/>
+        <path class="wire" d="M58 75 V110 H86" marker-end="url(#arr)"/>
+        <rect class="box" x="88" y="24" width="64" height="32" rx="6"/><text x="104" y="45">W₁</text>
+        <rect class="box" x="88" y="94" width="64" height="32" rx="6"/><text x="104" y="115">W₂</text>
+        <path class="wire" d="M152 40 H196" marker-end="url(#arr)"/><text x="168" y="33">a</text>
+        <path class="wire" d="M152 110 H196" marker-end="url(#arr)"/><text x="168" y="103">b</text>
+        <rect class="box gate" x="198" y="18" width="250" height="44" rx="8"/><text x="212" y="45" id="flow-gate">g = a + r(a)</text>
+        <rect class="box" x="198" y="88" width="250" height="44" rx="8"/><text x="212" y="115" id="flow-up">u = b</text>
+        <path class="wire" d="M448 40 H500 V64" marker-end="url(#arr)"/>
+        <path class="wire" d="M448 110 H500 V86" marker-end="url(#arr)"/>
+        <circle cx="500" cy="75" r="11" class="box"/><text x="494.5" y="80">×</text>
+        <path class="wire" d="M511 75 H560" marker-end="url(#arr)"/><text x="524" y="68">h</text>
+        <rect class="box" x="562" y="59" width="64" height="32" rx="6"/><text x="578" y="80">W₃</text>
+        <path class="wire" d="M626 75 H664" marker-end="url(#arr)"/><text x="672" y="80">out</text>
+        <text class="sub" x="198" y="146">1,344 hidden units per layer, 10 layers, d_model 512</text>
+        <text class="sub" x="538" y="112">h is what the sparsity</text><text class="sub" x="538" y="126">and INT4 tests measure</text>
+      </svg>
+    </div>
+  </header>
+
+  <nav class="picker" aria-label="Gate" id="picker"></nav>
+
+  <section class="gatehead" aria-live="polite">
+    <div class="what">
+      <div class="name"><h2 id="g-name"></h2><span class="tag" id="g-group"></span></div>
+      <div class="formula" id="g-formula"></div>
+      <p class="text" id="g-text"></p>
+    </div>
+    <div class="study">
+      <h3>In the study (5 seeds, best learning rate)</h3>
+      <dl class="facts" id="g-facts"></dl>
+      <div class="checks" id="g-checks"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-shape">
+    <h2 id="h-shape">Shape and slope</h2>
+    <div class="bench">
+      <div class="charts">
+        <figure class="fig" style="margin:0">
+          <div class="figrow"><h3>Gate value g(a)</h3><span class="readout" id="readout"></span></div>
+          <div class="keys" id="keys-curve"></div>
+          <div id="curve"></div>
+          <figcaption class="caption" id="cap-curve"></figcaption>
+        </figure>
+        <figure class="fig" style="margin:0">
+          <div class="figrow"><h3 id="slope-title">Slope dg/da</h3></div>
+          <div class="keys" id="keys-slope"></div>
+          <div id="slope"></div>
+          <figcaption class="caption" id="cap-slope"></figcaption>
+        </figure>
+        <figure class="fig" style="margin:0" id="upfig" hidden>
+          <div class="figrow"><h3>Value branch u(b)</h3></div>
+          <div class="keys" id="keys-up"></div>
+          <div id="upchart"></div>
+        </figure>
+      </div>
+      <div class="controls" id="controls">
+        <div class="ctl"><label for="c-a">Probe a <output id="o-a"></output></label><input type="range" id="c-a" min="-4" max="4" step="0.01" value="1.3"></div>
+        <div class="toggle"><input type="checkbox" id="c-refs" checked><label for="c-refs">Show bilinear and swiglu for comparison</label></div>
+        <div class="toggle"><input type="checkbox" id="c-snap"><label for="c-snap">Snap to the Δ/2 grid (the snap test)</label></div>
+        <div class="ctl" id="w-step"><label for="c-step">Stair width Δ <output id="o-step"></output></label><input type="range" id="c-step" min="0.25" max="2" step="0.05" value="1"><small>The study used Δ = 1.</small></div>
+        <div class="ctlgroup" id="w-anneal"><h3>Annealing</h3>
+          <div class="ctl"><label for="c-progress">Ripple strength t <output id="o-progress"></output></label><input type="range" id="c-progress" min="0" max="1" step="0.01" value="1"><small>t = min(1, step / (0.8 × 9,000)): 0 at the start, full strength from step 7,200.</small></div>
+        </div>
+        <div class="ctlgroup" id="w-ripple"><h3>Learned ripple (per unit)</h3>
+          <div class="ctl"><label for="c-amp">Amplitude A <output id="o-amp"></output></label><input type="range" id="c-amp" min="0" max="1" step="0.005" value="0.5"></div>
+          <div class="ctl"><label for="c-freq">Frequency f (× the Δ grid) <output id="o-freq"></output></label><input type="range" id="c-freq" min="0.25" max="3" step="0.01" value="1"></div>
+          <div class="ctl"><label for="c-phase">Phase φ <output id="o-phase"></output></label><input type="range" id="c-phase" min="-3.14" max="3.14" step="0.01" value="0"></div>
+          <div class="presets"><button type="button" class="btn" data-preset="init">Start of training</button><button type="button" class="btn" data-preset="trained">After training (mean)</button></div>
+        </div>
+        <div class="ctlgroup" id="w-window"><h3>Learned window (per unit)</h3>
+          <div class="ctl"><label for="c-centre">Centre c <output id="o-centre"></output></label><input type="range" id="c-centre" min="0" max="8" step="0.01" value="4"></div>
+          <div class="ctl"><label for="c-width">Width w <output id="o-width"></output></label><input type="range" id="c-width" min="0.25" max="4" step="0.01" value="2"></div>
+          <div class="presets"><button type="button" class="btn" data-preset="init">Start of training</button><button type="button" class="btn" data-preset="trained">After training (mean)</button></div>
+        </div>
+        <div class="ctlgroup" id="w-n"><h3>Neighbours</h3>
+          <div class="ctl"><label for="c-n">Neighbour count n for the curves <output id="o-n"></output></label><input type="range" id="c-n" min="0" max="8" step="0.05" value="4"><small id="n-help">n sums σ(a) over the 8 nearest units. With random activations it sits near 4.</small></div>
+        </div>
+        <div class="ctlgroup" id="w-life2"><h3>Life rule (per unit)</h3>
+          <div class="ctl"><label for="c-tg">Modulation strength tanh(γ) <output id="o-tg"></output></label><input type="range" id="c-tg" min="-1" max="1" step="0.01" value="0"><small>0 is plain SwiGLU. Units where the rule is off get m = 1 − tanh(γ); units where it is on keep m = 1.</small></div>
+          <div class="ctl"><label for="c-theta">Aliveness threshold θ <output id="o-theta"></output></label><input type="range" id="c-theta" min="-2" max="2" step="0.01" value="0"><small>A unit is alive when a &gt; θ.</small></div>
+          <div class="ctl" id="w-lo"><label for="c-lo">Window lower edge <output id="o-lo"></output></label><input type="range" id="c-lo" min="2" max="8" step="0.01" value="4"></div>
+          <div class="ctl" id="w-hi"><label for="c-hi">Window upper edge <output id="o-hi"></output></label><input type="range" id="c-hi" min="3" max="10" step="0.01" value="7"><small>The rule is on for z between lower + 1 and upper. Conway's edges are 4 and 7.</small></div>
+          <div class="presets"><button type="button" class="btn" data-preset="init">Start of training</button><button type="button" class="btn" data-preset="trained">After training (mean)</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-live">
+    <h2 id="h-live">A live layer</h2>
+    <p class="lede">64 hidden units of one layer. Each new token draws fresh pre-activations <code>a</code> and <code>b</code>; the selected gate turns them into <code>g</code> and <code>h = g · u</code>. Exact zeros and near-zero gates are what a sparse kernel could skip. Hover a unit for its numbers.</p>
+    <figure class="fig" style="margin:0">
+      <div class="livebar">
+        <button type="button" class="btn primary" id="play">Pause</button>
+        <button type="button" class="btn" id="next">Next token</button>
+        <div class="ctl"><label for="c-sigma">Activation spread σ <output id="o-sigma"></output></label><input type="range" id="c-sigma" min="0.25" max="3" step="0.05" value="1.2"></div>
+      </div>
+      <div class="counters" id="counters"></div>
+      <canvas id="strip" height="268" tabindex="0" aria-label="Live strip of 64 hidden units. Arrow keys step through the units."></canvas>
+      <figcaption class="caption">Rows share a scale for <code>a</code> and <code>g</code> (life_glu's gate lives in 0–1 and gets its own); <code>h</code> has its own. Gray bars are <code>|g| &lt; 0.05</code>; a dot on the baseline is an exact zero. Shaded brackets mark 8-unit blocks with every gate near zero (the study counted 64-unit blocks across 1,344 units). Activations here are random draws, not the trained model's.</figcaption>
+      <details id="values"><summary>Values for the current token</summary><div class="vt" id="vt"></div></details>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-life">
+    <h2 id="h-life">The neighbour rule</h2>
+    <div id="life-on">
+      <p class="lede" id="life-text"></p>
+      <figure class="fig" style="margin:0">
+        <div class="lifegrid">
+          <div><canvas id="ring" height="320" tabindex="0" aria-label="The 64 units on a ring, or on an 8 by 8 grid for conway2d_swiglu"></canvas><p class="caption" id="ring-cap"></p></div>
+          <div class="charts">
+            <div class="figrow"><h3 id="nb-title"></h3><span class="readout" id="nb-readout"></span></div>
+            <div class="keys" id="keys-nb"></div>
+            <div id="nbchart"></div>
+            <p class="caption" id="nb-cap"></p>
+          </div>
+        </div>
+      </figure>
+    </div>
+    <div id="life-off">
+      <p class="note">This gate is pointwise: each unit sees only its own <code>a</code>. The life gates are different. They arrange the units on a ring (or, for conway2d_swiglu, a 2-D grid) and let each unit's gate depend on its 8 nearest neighbours, the way a cell in Conway's Game of Life looks at the 8 cells around it. Round 2 made the rule smooth; round 3 kept it exact and used it to scale SwiGLU.</p>
+      <div class="jump" style="margin-top:10px"><button type="button" class="btn" data-go="conway_swiglu">See conway_swiglu</button><button type="button" class="btn" data-go="conway2d_swiglu">See conway2d_swiglu</button><button type="button" class="btn" data-go="life_glu">See life_glu</button><button type="button" class="btn" data-go="lenia_glu">See lenia_glu</button></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Every gate here is a line-for-line port of the study's training code, checked against PyTorch's own outputs for all 22 gates on 1,320 layers of 64 units at three settings (largest relative gap 1.4e-6). The study numbers come from the 172 runs of rounds 1–3.</p>
+    <p>Notation: σ is the logistic sigmoid, <code>r(x) = Δ/2π · sin(2πx/Δ)</code>, <code>bell(x; c, w) = exp(−((x − c)/w)²)</code>.</p>
+  </footer>
+</div>
+<div id="tip" role="tooltip" hidden></div>
+
+<script id="study" type="application/json">{"gates":{"swiglu":{"group":"baseline","desc":"silu(a) * b, the standard","lr":0.004,"n":5,"val":3.5512,"d":[0.0,0.0],"zeros":0.0,"near0":0.1187,"int4":0.771,"snap":0.206,"minutes":7.4},"bilinear":{"group":"baseline","desc":"a * b, no nonlinearity; the key control for every sine gate","lr":0.004,"n":5,"val":3.5769,"d":[0.0257,0.007],"zeros":0.0,"near0":0.1122,"int4":0.096,"snap":0.027,"minutes":7.4},"clipped_swiglu":{"group":"baseline","desc":"max(silu(a), 0) * b; same clipping as the stairs, no stairs","lr":0.001,"n":5,"val":3.5749,"d":[0.0237,0.0082],"zeros":0.7904,"near0":0.8117,"int4":0.072,"snap":0.017,"minutes":7.4},"relu2_glu":{"group":"baseline","desc":"relu(a)^2 * b; sparse gate in the BitNet a4.8 style","lr":0.001,"n":5,"val":3.5796,"d":[0.0284,0.0109],"zeros":0.6342,"near0":0.7371,"int4":0.093,"snap":0.008,"minutes":7.3},"drelu":{"group":"baseline","desc":"relu(a) * relu(b); TurboSparse's dReLU, the sparsity bar","lr":0.001,"n":5,"val":3.5733,"d":[0.0221,0.0158],"zeros":0.9017,"near0":0.7655,"int4":0.074,"snap":0.01,"minutes":7.3},"quant_mid":{"group":"yours","desc":"hard midpoint stairs on silu(a), STE (the original design)","lr":0.002,"n":5,"val":3.5737,"d":[0.0226,0.0069],"zeros":0.75,"near0":0.75,"int4":0.088,"snap":0.0,"minutes":7.4},"quant_round":{"group":"yours","desc":"zero-preserving stairs on silu(a): round to the step grid, STE","lr":0.002,"n":5,"val":3.5824,"d":[0.0313,0.0137],"zeros":0.829,"near0":0.829,"int4":0.07,"snap":0.0,"minutes":7.4},"sine_glu":{"group":"yours","desc":"a + sin(2 pi a)/(2 pi): two-sided smooth staircase, alpha = 1","lr":0.004,"n":5,"val":3.5989,"d":[0.0477,0.0135],"zeros":0.0,"near0":0.0438,"int4":0.126,"snap":0.013,"minutes":7.6},"sine_glu_a05":{"group":"yours","desc":"a + 0.5 sin(2 pi a)/(2 pi): partial ripple, alpha = 0.5","lr":0.004,"n":5,"val":3.5847,"d":[0.0335,0.0125],"zeros":0.0,"near0":0.0679,"int4":0.11,"snap":0.02,"minutes":7.6},"leaky_sine":{"group":"yours","desc":"stairs for a > 0, wiggles around 0.1 a for a <= 0 (s = 0.1, beta = 1)","lr":0.002,"n":5,"val":3.6268,"d":[0.0757,0.0101],"zeros":0.0,"near0":0.1566,"int4":0.099,"snap":0.017,"minutes":7.6},"leaky_sine_mini":{"group":"yours","desc":"stairs for a > 0, mini-stairs on 0.1 a for a <= 0 (s = beta = 0.1)","lr":0.004,"n":5,"val":3.5838,"d":[0.0326,0.0083],"zeros":0.0,"near0":0.1645,"int4":0.248,"snap":0.12,"minutes":7.6},"anneal_sine_glu":{"group":"long shot","desc":"ripple amplitude ramps 0 -> 1 over 80% of training","lr":0.004,"n":5,"val":3.5915,"d":[0.0404,0.0097],"zeros":0.0,"near0":0.0509,"int4":0.117,"snap":0.015,"minutes":7.6},"deadzone_sine_glu":{"group":"long shot","desc":"a - sin(2 pi a)/(2 pi): integer plateaus incl. a flat soft-off at 0","lr":0.004,"n":5,"val":3.6024,"d":[0.0512,0.0107],"zeros":0.0381,"near0":0.3509,"int4":0.083,"snap":0.014,"minutes":7.6},"learned_ripple_glu":{"group":"long shot","desc":"a + amp_c sin(w_c a + phase_c)/w_c, learnable per channel","lr":0.004,"n":5,"val":3.5793,"d":[0.0282,0.0086],"zeros":0.0,"near0":0.1157,"int4":0.115,"snap":0.025,"minutes":8.3,"trained":{"amp":0.263,"freq":1.207}},"pwl_stair_glu":{"group":"long shot","desc":"piecewise-linear stairs (no sin), blended 75% with a","lr":0.004,"n":5,"val":3.6005,"d":[0.0494,0.0099],"zeros":0.0,"near0":0.0509,"int4":0.117,"snap":0.012,"minutes":7.4},"sine_up":{"group":"long shot","desc":"silu(a) * (b + sin(2 pi b)/(2 pi)): ripple on the value branch","lr":0.002,"n":5,"val":3.5736,"d":[0.0225,0.0072],"zeros":0.0,"near0":0.0801,"int4":0.275,"snap":0.119,"minutes":7.7},"window_glu":{"group":"life","desc":"a * bell(8 sigmoid(a)): the unit's own activity through a learned window","lr":0.002,"n":5,"val":3.5872,"d":[0.0361,0.0111],"zeros":0.0,"near0":0.0677,"int4":0.06,"snap":0.132,"minutes":7.9,"trained":{"centre":3.999,"width":2.282}},"life_glu":{"group":"life","desc":"soft Conway B3/S23 from 8 ring neighbours' sigmoid(a), fixed windows","lr":0.004,"n":5,"val":3.5998,"d":[0.0487,0.0107],"zeros":0.0,"near0":0.8532,"int4":0.046,"snap":0.075,"minutes":9.6},"lenia_glu":{"group":"life","desc":"a * bell(neighbour count): bilinear signal, learned window on 8 neighbours","lr":0.004,"n":5,"val":3.5762,"d":[0.0251,0.0064],"zeros":0.0,"near0":0.1886,"int4":0.111,"snap":0.035,"minutes":10.5,"trained":{"centre":3.995,"width":1.355}},"conway_swiglu":{"group":"life2","desc":"silu(a) modulated by exact Conway B3/S23 on binarized units, 1-D ring","lr":0.004,"n":5,"val":3.5534,"d":[0.0022,0.0045],"zeros":0.0,"near0":0.1815,"int4":2.002,"snap":1.379,"minutes":11.0,"trained":{"tg":0.216,"theta":0.297,"lo":4.0,"hi":7.0}},"lenia_swiglu":{"group":"life2","desc":"silu(a) modulated by a Life rule with learned window edges, 1-D ring","lr":0.004,"n":5,"val":3.5535,"d":[0.0024,0.0047],"zeros":0.0,"near0":0.1915,"int4":3.174,"snap":2.795,"minutes":11.6,"trained":{"tg":0.243,"theta":0.233,"lo":4.236,"hi":6.83}},"conway2d_swiglu":{"group":"life2","desc":"conway_swiglu on a 2-D torus grid with Conway's Moore neighbourhood","lr":0.004,"n":5,"val":3.5544,"d":[0.0032,0.0029],"zeros":0.0,"near0":0.1939,"int4":1.356,"snap":1.002,"minutes":10.5,"trained":{"tg":0.221,"theta":0.29,"lo":4.0,"hi":7.0}}},"checks":[{"id":"Q1","q":"Does the sine ripple beat a plain bilinear gate?","a":"sine_glu","b":"bilinear","d":[0.022,0.0089],"n":5},{"id":"Q1b","q":"Does a half-strength ripple beat bilinear?","a":"sine_glu_a05","b":"bilinear","d":[0.0078,0.0069],"n":5},{"id":"Q2","q":"Do zero-preserving stairs cost loss beyond clipping?","a":"quant_round","b":"clipped_swiglu","d":[0.0076,0.0073],"n":5},{"id":"Q2b","q":"Midpoint stairs vs zero-preserving stairs","a":"quant_mid","b":"quant_round","d":[-0.0087,0.0083],"n":5},{"id":"Q3","q":"Does the slanted, wiggly negative side help?","a":"leaky_sine","b":"sine_glu","d":[0.0279,0.0095],"n":5},{"id":"Q3b","q":"Do negative mini-stairs help?","a":"leaky_sine_mini","b":"sine_glu","d":[-0.0151,0.0096],"n":5},{"id":"LS","q":"Annealed ripple vs fixed ripple","a":"anneal_sine_glu","b":"sine_glu","d":[-0.0074,0.0088],"n":5},{"id":"LS","q":"Zero-plateau phase vs midpoint phase","a":"deadzone_sine_glu","b":"sine_glu","d":[0.0035,0.0102],"n":5},{"id":"LS","q":"Learned per-channel ripple vs bilinear","a":"learned_ripple_glu","b":"bilinear","d":[0.0024,0.0041],"n":5},{"id":"LS","q":"Piecewise-linear stairs vs sine stairs","a":"pwl_stair_glu","b":"sine_glu","d":[0.0016,0.0118],"n":5},{"id":"LS","q":"Ripple on the value branch vs SwiGLU","a":"sine_up","b":"swiglu","d":[0.0225,0.0072],"n":5},{"id":"L1","q":"Does a pointwise window gate beat bilinear?","a":"window_glu","b":"bilinear","d":[0.0103,0.0061],"n":5},{"id":"L2","q":"Does neighbour gating beat bilinear?","a":"lenia_glu","b":"bilinear","d":[-0.0007,0.0055],"n":5},{"id":"L3","q":"Do the neighbours matter, beyond the unit's own window?","a":"lenia_glu","b":"window_glu","d":[-0.011,0.0058],"n":5},{"id":"L4","q":"The literal soft Conway gate vs swiglu","a":"life_glu","b":"swiglu","d":[0.0487,0.0107],"n":5},{"id":"R1","q":"Exact Conway modulation on SwiGLU vs SwiGLU","a":"conway_swiglu","b":"swiglu","d":[0.0022,0.0045],"n":5},{"id":"R2","q":"Learned-window Life modulation vs SwiGLU","a":"lenia_swiglu","b":"swiglu","d":[0.0024,0.0047],"n":5},{"id":"R3","q":"Learned window vs Conway's fixed window","a":"lenia_swiglu","b":"conway_swiglu","d":[0.0002,0.0072],"n":5},{"id":"R4","q":"2-D torus grid vs 1-D ring, same exact rule","a":"conway2d_swiglu","b":"conway_swiglu","d":[0.001,0.006],"n":5}]}</script>
+<script>
+/* The 22 gates of variants.py, line for line, for the page. Pure functions only. */
+(function (root) {
+  "use strict";
+  var TAU = 2 * Math.PI;
+  var LIFE_SURVIVE = [2.5, 1.0], LIFE_BIRTH = [3.0, 0.6], RADIUS = 4;
+  var LIFE_LO = 4, LIFE_HI = 7, LIFE_BETA = 2;          /* round 3: Conway's B3/S23 as a trapezoid over z = 2n + s */
+  var LIFE2 = { conway_swiglu: true, lenia_swiglu: true, conway2d_swiglu: true };
+  function sig(x) { return 1 / (1 + Math.exp(-x)); }
+  function silu(x) { return x * sig(x); }
+  function siluGrad(x) { var s = sig(x); return s * (1 + x * (1 - s)); }
+  function relu(x) { return x > 0 ? x : 0; }
+  function roundHalfEven(x) {             /* torch.round */
+    var f = Math.floor(x), d = x - f;
+    if (d < 0.5) return f;
+    if (d > 0.5) return f + 1;
+    return f % 2 === 0 ? f : f + 1;
+  }
+  function ripple(x, s) { return s / TAU * Math.sin(TAU * x / s); }
+  function pwlStair(x, s) {
+    var m = roundHalfEven(x / s), d = x / s - m;
+    return s * (m + Math.max(-0.5, Math.min(0.5, 2 * d)));
+  }
+  function bell(x, c, w) { var z = (x - c) / w; return Math.exp(-z * z); }
+  function trapezoid(z, lo, hi) { return relu(z - lo) - relu(z - lo - 1) - relu(z - hi) + relu(z - hi - 1); }
+  function smoothWindow(z, lo, hi) { return sig(LIFE_BETA * (z - lo - 0.5)) - sig(LIFE_BETA * (z - hi - 0.5)); }
+  /* round 3: alive s (0/1), alive-neighbour count n -> z, rule r and modulation m = 1 + tanh(gamma) (r - 1) */
+  function lifeRule(v, s, n, P) {
+    var lo = v === "lenia_swiglu" ? P.lo : LIFE_LO, hi = v === "lenia_swiglu" ? P.hi : LIFE_HI;
+    var z = 2 * n + s, r = trapezoid(z, lo, hi);
+    return { z: z, r: r, m: 1 + P.tg * (r - 1), lo: lo, hi: hi };
+  }
+
+  /* gate value for one unit; n is the unit's neighbour count (life_glu, lenia_glu: summed sigmoid; round 3: alive count) */
+  function gate(v, a, P, n) {
+    var s = P.step, r;
+    switch (v) {
+      case "swiglu": return silu(a);
+      case "bilinear": return a;
+      case "clipped_swiglu": return relu(silu(a));
+      case "relu2_glu": return relu(a) * relu(a);
+      case "drelu": return relu(a);
+      case "quant_mid": { var q = silu(a); return q > 0 ? s * (Math.floor(q / s) + 0.5) : 0; }
+      case "quant_round": return s * roundHalfEven(silu(a) / s);
+      case "sine_glu": return a + ripple(a, s);
+      case "sine_glu_a05": return a + 0.5 * ripple(a, s);
+      case "leaky_sine": r = ripple(a, s); return a > 0 ? a + r : 0.1 * a + r;
+      case "leaky_sine_mini": r = ripple(a, s); return a > 0 ? a + r : 0.1 * (a + r);
+      case "anneal_sine_glu": return a + P.progress * ripple(a, s);
+      case "deadzone_sine_glu": return a - ripple(a, s);
+      case "learned_ripple_glu": { var w = (TAU / s) * P.freq; return a + P.amp * Math.sin(w * a + P.phase) / w; }
+      case "pwl_stair_glu": return a + 0.75 * (pwlStair(a, s) - a);
+      case "sine_up": return silu(a);
+      case "window_glu": return a * bell(8 * sig(a), P.centre, P.width);
+      case "life_glu": { var p = sig(a); return p * bell(n, LIFE_SURVIVE[0], LIFE_SURVIVE[1]) + (1 - p) * bell(n, LIFE_BIRTH[0], LIFE_BIRTH[1]); }
+      case "lenia_glu": return a * bell(n, P.centre, P.width);
+      case "conway_swiglu": case "lenia_swiglu": case "conway2d_swiglu":
+        return silu(a) * lifeRule(v, a > P.theta ? 1 : 0, n, P).m;
+    }
+    throw new Error("unknown gate " + v);
+  }
+  function up(v, b, P) {
+    if (v === "drelu") return relu(b);
+    if (v === "sine_up") return b + ripple(b, P.step);
+    return b;
+  }
+  function usesNeighbours(v) { return v === "life_glu" || v === "lenia_glu" || !!LIFE2[v]; }
+  function ringCount(p) {                 /* summed p of the 2*RADIUS nearest units on the ring, self excluded */
+    var H = p.length, out = new Array(H);
+    for (var i = 0; i < H; i++) {
+      var t = 0;
+      for (var k = 1; k <= RADIUS; k++) t += p[(i + k) % H] + p[(i - k + H) % H];
+      out[i] = t;
+    }
+    return out;
+  }
+  function gridShape(H) {                 /* closest-to-square factorisation: 64 -> 8 x 8, 1344 -> 32 x 42 */
+    var r = Math.floor(Math.sqrt(H));
+    while (H % r) r--;
+    return [r, H / r];
+  }
+  function mooreNeighbours(i, H) {        /* the 8 Moore neighbours of unit i on the 2-D torus grid */
+    var rc = gridShape(H), R = rc[0], C = rc[1], r0 = Math.floor(i / C), c0 = i % C, out = [];
+    for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++) if (dr || dc) out.push(((r0 + dr + R) % R) * C + (c0 + dc + C) % C);
+    return out;
+  }
+  function mooreCount(p) {
+    return p.map(function (_, i) { return mooreNeighbours(i, p.length).reduce(function (t, j) { return t + p[j]; }, 0); });
+  }
+  /* one FFN layer of hidden units: returns per-unit a, b, p (aliveness), n, g, u, h (+ z, r, m for round 3) */
+  function layer(v, a, b, P) {
+    if (LIFE2[v]) {
+      var s = a.map(function (x) { return x > P.theta ? 1 : 0; });
+      var cnt = v === "conway2d_swiglu" ? mooreCount(s) : ringCount(s);
+      return a.map(function (ai, i) {
+        var L = lifeRule(v, s[i], cnt[i], P), g = silu(ai) * L.m, u = up(v, b[i], P);
+        return { a: ai, b: b[i], p: s[i], n: cnt[i], z: L.z, r: L.r, m: L.m, g: g, u: u, h: g * u };
+      });
+    }
+    var p = a.map(sig), n = usesNeighbours(v) ? ringCount(p) : null;
+    return a.map(function (ai, i) {
+      var g = gate(v, ai, P, n ? n[i] : 0), u = up(v, b[i], P);
+      return { a: ai, b: b[i], p: p[i], n: n ? n[i] : null, g: g, u: u, h: g * u };
+    });
+  }
+  root.GATES = {
+    sig: sig, silu: silu, siluGrad: siluGrad, relu: relu, ripple: ripple, bell: bell, roundHalfEven: roundHalfEven,
+    trapezoid: trapezoid, smoothWindow: smoothWindow, lifeRule: lifeRule, gridShape: gridShape,
+    mooreNeighbours: mooreNeighbours, mooreCount: mooreCount,
+    gate: gate, up: up, layer: layer, ringCount: ringCount, usesNeighbours: usesNeighbours,
+    STE: { quant_mid: true, quant_round: true }, LIFE2: LIFE2, LIFE_SURVIVE: LIFE_SURVIVE, LIFE_BIRTH: LIFE_BIRTH, RADIUS: RADIUS
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var G = window.GATES;
+  var D = JSON.parse(document.getElementById("study").textContent);
+  var STUDY = D.gates, CHECKS = D.checks, ORDER = Object.keys(STUDY);
+  var NS = "http://www.w3.org/2000/svg";
+  var MINUS = "−";
+  var REDUCE = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var GROUPS = [["baseline", "Baselines"], ["yours", "Stair gates"], ["long shot", "Long shots"], ["life", "Life gates"], ["life2", "Life on SiLU"]];
+  var STEPPED = { quant_mid: 1, quant_round: 1, sine_glu: 1, sine_glu_a05: 1, leaky_sine: 1, leaky_sine_mini: 1, anneal_sine_glu: 1,
+                  deadzone_sine_glu: 1, learned_ripple_glu: 1, pwl_stair_glu: 1, sine_up: 1 };
+  var LIFE = { window_glu: 1, life_glu: 1, lenia_glu: 1, conway_swiglu: 1, lenia_swiglu: 1, conway2d_swiglu: 1 };
+  var INFO = {
+    swiglu: ["g = silu(a) = a · σ(a)", "The standard gate. silu is a smooth ReLU: close to 0 for negative a, close to a for positive a, with a small dip to about −0.28 near a = −1.3."],
+    bilinear: ["g = a", "No nonlinearity at all: the layer outputs a · b, a pure quadratic form. Every sine gate is this line plus a ripple, so bilinear is their control."],
+    clipped_swiglu: ["g = max(silu(a), 0)", "silu with its negative dip cut to zero, so every unit with a ≤ 0 is exactly off. The stair gates clip the same way, which makes this their control."],
+    relu2_glu: ["g = relu(a)²", "Squared ReLU, the BitNet a4.8 style of sparse gate: off for a ≤ 0, quadratic above."],
+    drelu: ["g = relu(a)      u = relu(b)", "ReLU on both branches. h is exactly zero whenever either branch is negative, which makes this the sparsity bar of the study."],
+    quant_mid: ["g = Δ · (⌊silu(a)/Δ⌋ + ½)   if silu(a) > 0, else 0\nbackward pass: d silu(a)/da   (straight-through)", "silu(a) moved to the middle of its stair: values in (0, Δ) become Δ/2, values in [Δ, 2Δ) become 1.5Δ, and nonpositive values become 0. Flat steps have no slope, so training uses a straight-through estimator and backpropagates as if the gate were silu(a)."],
+    quant_round: ["g = Δ · round(silu(a)/Δ)\nbackward pass: d silu(a)/da   (straight-through)", "silu(a) rounded to the nearest multiple of Δ, so anything below Δ/2 becomes exactly 0. Same straight-through trick as quant_mid."],
+    sine_glu: ["g = a + r(a)      r(a) = Δ/2π · sin(2πa/Δ)", "The line g = a plus a sine ripple of matching period: a smooth staircase. The slope is 1 + cos(2πa/Δ), so it is exactly flat at a = Δ(k + ½) and twice as steep halfway between. It has stairs on both sides of zero."],
+    sine_glu_a05: ["g = a + ½ · r(a)", "The same ripple at half strength. The slope never reaches zero, so the treads tilt instead of going flat."],
+    leaky_sine: ["g = a + r(a)        for a > 0\ng = 0.1a + r(a)     for a ≤ 0", "Stairs for positive a. For negative a the line drops to 0.1a but the full ripple stays, so the gate wiggles around a shallow slope."],
+    leaky_sine_mini: ["g = a + r(a)          for a > 0\ng = 0.1 · (a + r(a))  for a ≤ 0", "Stairs for positive a. For negative a the whole staircase shrinks to a tenth, giving tiny stairs on a shallow slope."],
+    anneal_sine_glu: ["g = a + t · r(a)      t: 0 → 1 over the first 80% of training", "sine_glu whose ripple grows in during training. It starts as bilinear and carves the stairs late. Move the strength slider to watch the stairs appear."],
+    deadzone_sine_glu: ["g = a − r(a)", "The ripple with the opposite sign. The flat treads move to the integers, including a flat tread at a = 0 that acts as a soft off state."],
+    learned_ripple_glu: ["g = a + A · sin(ωa + φ) / ω      ω = 2π · f / Δ, learned per unit", "Every hidden unit learns its own ripple amplitude, frequency and phase, starting from sine_glu's ripple at half strength (A = 0.5, f = 1, φ = 0)."],
+    pwl_stair_glu: ["g = 0.25 · a + 0.75 · stairs(a)", "A staircase built from straight segments instead of a sine: flat for half of each period with plateaus at a = Δ(k + ½), slope 2 on the risers, then blended 75% with a. It tests whether the shape matters more than the smoothness."],
+    sine_up: ["g = silu(a)      u = b + r(b)", "A plain SwiGLU gate with the ripple moved to the value branch."],
+    window_glu: ["g = a · bell(8σ(a); c, w)      bell(x; c, w) = exp(−((x − c)/w)²)", "The unit's own activity σ(a), scaled to 0–8, passes through a learned bell window. Inside the window g ≈ a; far outside it the gate closes. It uses no neighbours, so it is the pointwise control for lenia_glu."],
+    life_glu: ["g = p · bell(n; 2.5, 1) + (1 − p) · bell(n; 3, 0.6)\np = σ(a),  n = Σ σ(a) over the 8 nearest units on the ring", "Conway's B3/S23 rule made smooth. A unit's aliveness is p = σ(a), and n counts how alive its 8 ring neighbours are. A live unit survives near n = 2–3 and a dead unit is born near n = 3; g blends the two bells by p. The rule is applied once per token, as a gate. There are no generations."],
+    lenia_glu: ["g = a · bell(n; c, w)\nn = Σ σ(a) over the 8 nearest units on the ring", "A bilinear signal whose gain is set by the neighbourhood: a unit passes its own a when its neighbours' summed activity lands inside a learned window. With the neighbours fixed, g is a straight line through 0."],
+    conway_swiglu: ["g = silu(a) · m      m = 1 + tanh(γ) · (r − 1)\nr = trapezoid(z),  z = 2n + s,  s = 1[a > θ]\nn = alive units among the 8 nearest on the ring", "SwiGLU modulated by the exact Game of Life rule. A unit is alive when a > θ, and z = 2n + s packs its own state and its alive-neighbour count into one number. The four-ReLU trapezoid is 1 for exactly z = 5, 6 and 7: survive with 2 or 3, or be born with 3. The rule only scales silu(a), between 0 and 2, and tanh(γ) starts at 0, so the gate starts as plain SwiGLU. Training settled near tanh(γ) = +0.22 and θ = +0.30, so units where the rule is off are damped by about a fifth."],
+    lenia_swiglu: ["g = silu(a) · m      m = 1 + tanh(γ) · (r − 1)\nr = trapezoid(z; lo, hi),  z = 2n + s,  lo and hi learned per unit", "conway_swiglu with the rule's window edges learned per unit, starting at Conway's 4 and 7. Training moved them in a little, to 4.24 and 6.83 on average, and kept a similar damping (tanh(γ) about +0.24)."],
+    conway2d_swiglu: ["g = silu(a) · m,  same rule as conway_swiglu\nn = alive units among the 8 Moore neighbours on a 2-D torus", "conway_swiglu on a 2-D grid, exactly like Conway's board: the network's 1,344 units form a 32 × 42 torus and each unit counts its 8 Moore neighbours. Here the 64 units form an 8 × 8 grid."]
+  };
+  var DEFAULTS = { step: 1, progress: 1, amp: 0.5, freq: 1, phase: 0, centre: 4, width: 2, tg: 0, theta: 0, lo: 4, hi: 7 };
+  var params = {};
+  /* the round-3 gates open at their trained mean: at the start of training they are plain SwiGLU */
+  ORDER.forEach(function (v) { params[v] = Object.assign({}, DEFAULTS, G.LIFE2[v] ? STUDY[v].trained : {}); });
+  var state = { v: "sine_glu", a: 1.3, n: 4, refs: true, snap: false, sigma: 1.2, playing: !REDUCE, hover: -1 };
+
+  function S(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+  function H(tag, cls, text, parent) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; }
+  function lin(d0, d1, r0, r1) { return function (v) { return r0 + (v - d0) / (d1 - d0) * (r1 - r0); }; }
+  function niceTicks(lo, hi, n) {
+    var step0 = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(step0))), err = step0 / mag;
+    var step = (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1) * mag, out = [];
+    for (var v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toFixed(10));
+    return out;
+  }
+  function decs(t) { if (t.length < 2) return 0; var st = Math.abs(t[1] - t[0]); return st >= 1 ? 0 : Math.min(3, Math.ceil(-Math.log10(st) - 1e-9)); }
+  function num(x, d) { if (d == null) d = 2; var s = Math.abs(x).toFixed(d); return (x < 0 && +s !== 0 ? MINUS : "") + s; }
+  function sgn(x, d) { var s = Math.abs(x).toFixed(d); return (x < 0 && +s !== 0 ? MINUS : "+") + s; }
+  function pct(x) { return (x * 100).toFixed(1) + "%"; }
+  function lrLabel(lr) { return ({ "0.0005": "5e-4", "0.001": "1e-3", "0.002": "2e-3", "0.004": "4e-3", "0.008": "8e-3" })[String(lr)] || String(lr); }
+  function P() { return params[state.v]; }
+  function slug(v) { return v.replace(/_/g, "-"); }
+
+  /* tooltip */
+  var tip = document.getElementById("tip");
+  function place(cx, cy) {
+    var pad = 14, w = tip.offsetWidth, h = tip.offsetHeight, x = cx + pad, y = cy + pad;
+    if (x + w > innerWidth - 8) x = cx - w - pad;
+    if (y + h > innerHeight - 8) y = cy - h - pad;
+    tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+  }
+  function showTip(lines, cx, cy) {
+    tip.replaceChildren();
+    lines.forEach(function (l) { var row = H("div", null, null, tip); if (l[0]) H("strong", null, l[0], row); if (l[1]) H("span", null, (l[0] ? " " : "") + l[1], row); });
+    tip.hidden = false; place(cx, cy);
+  }
+  function hideTip() { tip.hidden = true; }
+
+  /* charts redraw at their container's real width */
+  var redraws = [];
+  function responsive(box, draw) {
+    var last = 0, fn = function () { var w = Math.floor(box.clientWidth); if (w > 0) { last = w; box.replaceChildren(); draw(w); } };
+    new ResizeObserver(function () { if (Math.floor(box.clientWidth) !== last) fn(); }).observe(box);
+    redraws.push(fn);
+  }
+  function redrawAll() { redraws.forEach(function (f) { f(); }); }
+  function keyLine(box, color, label, opts) {
+    var k = H("span", "key", null, box), sw = S("svg", { width: 18, height: 10, "aria-hidden": "true" }, k);
+    S("line", { x1: 1, x2: 17, y1: 5, y2: 5, stroke: color, "stroke-width": (opts && opts.thin) ? 1.5 : 2.5, "stroke-linecap": "round" }, sw);
+    k.appendChild(document.createTextNode(label));
+  }
+
+  /* generic line chart: series [{f, color, label, width}], x domain, optional marker and crosshair */
+  function lineChart(box, W, cfg) {
+    var Hh = cfg.height || 250, m = { l: 40, r: 12, t: 10, b: 26 };
+    var x = lin(cfg.x0, cfg.x1, m.l, W - m.r), N = 400, xs = [];
+    for (var i = 0; i <= N; i++) xs.push(cfg.x0 + (cfg.x1 - cfg.x0) * i / N);
+    var vals = cfg.series.map(function (s) { return xs.map(s.f); });
+    var lo = cfg.y0, hi = cfg.y1;
+    if (lo == null) {
+      lo = Infinity; hi = -Infinity;
+      cfg.series.forEach(function (s, k) { if (s.fit === false) return; vals[k].forEach(function (y) { if (isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); } }); });
+      lo = Math.min(lo, 0); hi = Math.max(hi, 0);
+      if (cfg.minSpan) { var mid = (lo + hi) / 2; if (hi - lo < cfg.minSpan) { lo = Math.min(lo, mid - cfg.minSpan / 2); hi = Math.max(hi, mid + cfg.minSpan / 2); } }
+      if (cfg.cap) { lo = Math.max(lo, cfg.cap[0]); hi = Math.min(hi, cfg.cap[1]); }
+      var pad = (hi - lo) * 0.06 || 0.5; lo -= pad; hi += pad;
+    }
+    var y = lin(lo, hi, Hh - m.b, m.t);
+    var svg = S("svg", { width: W, height: Hh, role: "img", "aria-label": cfg.aria || "" }, box);
+    var cid = "c" + Math.random().toString(36).slice(2);
+    var cp = S("clipPath", { id: cid }, S("defs", {}, svg)); S("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: Hh - m.t - m.b }, cp);
+    var yt = niceTicks(lo, hi, 5), yd = decs(yt);
+    yt.forEach(function (t) {
+      S("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), class: t === 0 ? "zero" : "gridline" }, svg);
+      var tx = S("text", { x: m.l - 6, y: y(t) + 3.5, "text-anchor": "end" }, svg); tx.textContent = num(t, yd);
+    });
+    var xt = niceTicks(cfg.x0, cfg.x1, Math.max(4, Math.min(8, Math.floor(W / 80)))), xd = decs(xt);
+    xt.forEach(function (t) {
+      S("line", { x1: x(t), x2: x(t), y1: m.t, y2: Hh - m.b, class: t === 0 ? "zero" : "gridline" }, svg);
+      var tx = S("text", { x: x(t), y: Hh - 8, "text-anchor": "middle" }, svg); tx.textContent = num(t, xd);
+    });
+    if (cfg.xlabel) { var xl = S("text", { x: W - m.r, y: Hh - 8 - 13, "text-anchor": "end", class: "lab" }, svg); xl.textContent = cfg.xlabel; }
+    var g = S("g", { "clip-path": "url(#" + cid + ")" }, svg);
+    cfg.series.forEach(function (s, k) {
+      var d = "", pen = false;
+      vals[k].forEach(function (yy, i) {
+        if (!isFinite(yy)) { pen = false; return; }
+        var px = x(xs[i]).toFixed(2), py = Math.max(-1e4, Math.min(1e4, y(yy))).toFixed(2);
+        d += (pen ? "L" : "M") + px + "," + py; pen = true;
+      });
+      S("path", { d: d, fill: "none", stroke: s.color, "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, g);
+    });
+    if (cfg.marker != null) {
+      var mx = cfg.marker, my = cfg.series[0].f(mx);
+      if (isFinite(my) && my >= lo && my <= hi) {
+        S("circle", { cx: x(mx), cy: y(my), r: 6.5, fill: "var(--surface)" }, svg);
+        S("circle", { cx: x(mx), cy: y(my), r: 4.5, fill: cfg.series[0].color }, svg);
+      }
+    }
+    if (cfg.after) cfg.after(svg, x, y, m, W, Hh);
+    var cross = S("line", { y1: m.t, y2: Hh - m.b, stroke: "var(--ink-2)", "stroke-width": 1, visibility: "hidden" }, svg);
+    var dots = cfg.series.map(function (s) { return S("circle", { r: 4, fill: s.color, stroke: "var(--surface)", "stroke-width": 2, visibility: "hidden" }, svg); });
+    var hit = S("rect", { x: m.l, y: 0, width: W - m.l - m.r, height: Hh, fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", function (e) {
+      var b = svg.getBoundingClientRect(), xv = cfg.x0 + (e.clientX - b.left - m.l) / (W - m.l - m.r) * (cfg.x1 - cfg.x0);
+      xv = Math.max(cfg.x0, Math.min(cfg.x1, xv));
+      cross.setAttribute("x1", x(xv)); cross.setAttribute("x2", x(xv)); cross.setAttribute("visibility", "visible");
+      var lines = [["", (cfg.xname || "a") + " = " + num(xv, 2)]];
+      cfg.series.forEach(function (s, k) {
+        var yy = s.f(xv);
+        if (isFinite(yy) && yy >= lo && yy <= hi) { dots[k].setAttribute("cx", x(xv)); dots[k].setAttribute("cy", y(yy)); dots[k].setAttribute("visibility", "visible"); }
+        else dots[k].setAttribute("visibility", "hidden");
+        lines.push([num(yy, 3), s.label]);
+      });
+      showTip(lines, e.clientX, e.clientY);
+    });
+    hit.addEventListener("pointerleave", function () { cross.setAttribute("visibility", "hidden"); dots.forEach(function (d) { d.setAttribute("visibility", "hidden"); }); hideTip(); });
+    return { x: x, y: y, svg: svg };
+  }
+
+  /* picker */
+  (function () {
+    var nav = document.getElementById("picker");
+    GROUPS.forEach(function (gr) {
+      var row = H("div", "prow", null, nav); H("span", null, gr[1], row);
+      var chips = H("div", "chips", null, row);
+      ORDER.filter(function (v) { return STUDY[v].group === gr[0]; }).forEach(function (v) {
+        var b = H("button", null, v, chips); b.type = "button"; b.dataset.v = v; b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", function () { select(v, true); });
+      });
+    });
+    document.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { select(b.dataset.go, true); document.getElementById("h-life").scrollIntoView({ behavior: REDUCE ? "auto" : "smooth" }); }); });
+  })();
+
+  /* gate header */
+  function renderHead() {
+    var v = state.v, s = STUDY[v], info = INFO[v];
+    document.getElementById("g-name").textContent = v;
+    document.getElementById("g-group").textContent = GROUPS.filter(function (g) { return g[0] === s.group; })[0][1];
+    document.getElementById("g-formula").textContent = info[0];
+    document.getElementById("g-text").textContent = info[1];
+    var gl = info[0].split("\n")[0].split("   ")[0].trim();
+    document.getElementById("flow-gate").textContent = gl.length > 30 ? gl.slice(0, 29) + "…" : gl;
+    document.getElementById("flow-up").textContent = v === "drelu" ? "u = relu(b)" : v === "sine_up" ? "u = b + r(b)" : "u = b";
+    var facts = document.getElementById("g-facts"); facts.replaceChildren();
+    [["Val loss", s.val.toFixed(4)],
+     ["vs swiglu", v === "swiglu" ? "reference" : sgn(s.d[0], 4) + " ± " + s.d[1].toFixed(4)],
+     ["Best LR", lrLabel(s.lr)],
+     ["Exact zeros in h", pct(s.zeros)],
+     ["|g| < 0.05", pct(s.near0)],
+     ["INT4 penalty", sgn(s.int4, 3)]].forEach(function (f) { var d = H("div", null, null, facts); H("dt", null, f[0], d); H("dd", null, f[1], d); });
+    var ck = document.getElementById("g-checks"); ck.replaceChildren();
+    CHECKS.filter(function (c) { return c.a === v || c.b === v; }).forEach(function (c) {
+      var row = H("div", null, null, ck); H("b", null, c.id === "LS" ? "LS" : c.id, row);
+      var sigf = Math.abs(c.d[0]) > c.d[1];
+      var verdict = !sigf ? "no clear difference" : (c.d[0] < 0 ? c.a : c.b) + " has lower loss";
+      H("span", null, c.q + " " + c.a + " − " + c.b + " = " + sgn(c.d[0], 4) + " ± " + c.d[1].toFixed(4) + ": " + verdict + ".", row);
+    });
+    if (!ck.childNodes.length) H("p", "caption", "No pre-registered check compares this gate directly; it serves as a reference.", ck);
+  }
+
+  /* controls */
+  var CTL = {
+    a: ["c-a", "o-a", function (x) { return num(x, 2); }],
+    step: ["c-step", "o-step", function (x) { return x.toFixed(2); }],
+    progress: ["c-progress", "o-progress", function (x) { return x.toFixed(2); }],
+    amp: ["c-amp", "o-amp", function (x) { return x.toFixed(3); }],
+    freq: ["c-freq", "o-freq", function (x) { return x.toFixed(2); }],
+    phase: ["c-phase", "o-phase", function (x) { return num(x, 2); }],
+    centre: ["c-centre", "o-centre", function (x) { return x.toFixed(2); }],
+    width: ["c-width", "o-width", function (x) { return x.toFixed(2); }],
+    n: ["c-n", "o-n", function (x) { return x.toFixed(2); }],
+    sigma: ["c-sigma", "o-sigma", function (x) { return x.toFixed(2); }],
+    tg: ["c-tg", "o-tg", function (x) { return sgn(x, 2); }],
+    theta: ["c-theta", "o-theta", function (x) { return sgn(x, 2); }],
+    lo: ["c-lo", "o-lo", function (x) { return x.toFixed(2); }],
+    hi: ["c-hi", "o-hi", function (x) { return x.toFixed(2); }]
+  };
+  function syncControls() {
+    var p = P();
+    Object.keys(CTL).forEach(function (k) {
+      var val = k in p ? p[k] : state[k], c = CTL[k];
+      document.getElementById(c[0]).value = val;
+      document.getElementById(c[1]).textContent = c[2](val);
+    });
+    var v = state.v;
+    document.getElementById("w-step").hidden = !(STEPPED[v] || state.snap);
+    document.getElementById("w-anneal").hidden = v !== "anneal_sine_glu";
+    document.getElementById("w-ripple").hidden = v !== "learned_ripple_glu";
+    document.getElementById("w-window").hidden = !(v === "window_glu" || v === "lenia_glu");
+    document.getElementById("w-n").hidden = !G.usesNeighbours(v);
+    document.getElementById("w-life2").hidden = !G.LIFE2[v];
+    document.getElementById("w-lo").hidden = document.getElementById("w-hi").hidden = v !== "lenia_swiglu";
+    var cn = document.getElementById("c-n");
+    if (G.LIFE2[v]) { cn.step = "1"; state.n = Math.round(state.n); cn.value = state.n; document.getElementById("o-n").textContent = String(state.n); }
+    else cn.step = "0.05";
+    document.getElementById("n-help").textContent = !G.LIFE2[v] ? "n sums σ(a) over the 8 nearest units. With random activations it sits near 4."
+      : (v === "conway2d_swiglu" ? "n counts alive units (a > θ) among the 8 Moore neighbours on the grid." : "n counts alive units (a > θ) among the 8 nearest units on the ring.")
+        + " With θ = 0 and random activations it is Binomial(8, ½), mean 4.";
+  }
+  Object.keys(CTL).forEach(function (k) {
+    var c = CTL[k];
+    document.getElementById(c[0]).addEventListener("input", function (e) {
+      var x = parseFloat(e.target.value);
+      if (k in DEFAULTS) P()[k] = x; else state[k] = x;
+      document.getElementById(c[1]).textContent = c[2](x);
+      if (k === "sigma") { newToken(performance.now()); return; }
+      if (k === "a") { drawShape(); return; }
+      drawShape(); renderLifeStatic(); dirty = true;
+    });
+  });
+  document.getElementById("c-refs").addEventListener("change", function (e) { state.refs = e.target.checked; drawShape(); });
+  document.getElementById("c-snap").addEventListener("change", function (e) { state.snap = e.target.checked; syncControls(); drawShape(); });
+  document.querySelectorAll("[data-preset]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var v = state.v, p = P(), t = STUDY[v].trained || {};
+      if (b.dataset.preset === "init") { p.amp = 0.5; p.freq = 1; p.phase = 0; p.centre = 4; p.width = 2; p.tg = 0; p.theta = 0; p.lo = 4; p.hi = 7; }
+      else if (v === "learned_ripple_glu") { p.amp = t.amp; p.freq = t.freq; p.phase = 0; }
+      else if (G.LIFE2[v]) { p.tg = t.tg; p.theta = t.theta; p.lo = t.lo; p.hi = t.hi; }
+      else { p.centre = t.centre; p.width = t.width; }
+      syncControls(); drawShape(); renderLifeStatic(); dirty = true;
+    });
+  });
+
+  /* shape and slope charts */
+  var curveBox = document.getElementById("curve"), slopeBox = document.getElementById("slope"), upBox = document.getElementById("upchart");
+  function gateF(v) { var p = P(), n = state.n; return function (a) { return G.gate(v, a, p, n); }; }
+  function snapF(f) { var q = P().step / 2; return function (a) { return q * G.roundHalfEven(f(a) / q); }; }
+  function slopeF(f) { var h = 1e-4; return function (a) { return (f(a + h) - f(a - h)) / (2 * h); }; }
+  function drawShape() {
+    var v = state.v, f = gateF(v), p = P();
+    var y = f(state.a);
+    document.getElementById("readout").textContent = "a = " + num(state.a, 2) + " → g = " + num(y, 3) + (state.snap ? "  (snapped " + num(snapF(f)(state.a), 3) + ")" : "");
+    var series = [{ f: f, color: "var(--s1)", label: v }];
+    if (G.STE[v]) series.push({ f: G.silu, color: "var(--s2)", label: "silu(a), what the backward pass sees", fit: false });
+    if (state.snap) series.push({ f: snapF(f), color: "var(--s3)", label: "snapped to the Δ/2 grid" });
+    if (state.refs) {
+      if (v !== "bilinear") series.push({ f: function (a) { return a; }, color: "var(--ref)", label: "bilinear", width: 1.5, fit: false });
+      if (v !== "swiglu") series.push({ f: G.silu, color: "var(--muted)", label: "swiglu", width: 1.5, fit: false });
+    }
+    var kc = document.getElementById("keys-curve"); kc.replaceChildren();
+    series.forEach(function (s) { keyLine(kc, s.color, s.label, { thin: s.width === 1.5 }); });
+    curveBox.replaceChildren(); redrawCurve = function (W) {
+      lineChart(curveBox, W, { x0: -4, x1: 4, series: series, marker: state.a, minSpan: 2, cap: [-4.5, 4.5], height: 270,
+        aria: v + " gate value against a", xlabel: "a" });
+    };
+    redrawCurve(Math.floor(curveBox.clientWidth) || 600);
+    var capc = G.LIFE2[v] ? "Drawn with n = " + state.n + " alive neighbours held fixed. The jump at a = θ is the unit itself coming alive: z = 2n + s moves by one, which can switch the rule. In the network n changes with every token." :
+      G.usesNeighbours(v) ? "Drawn with the neighbour count held at n = " + state.n.toFixed(2) + "; in the network n changes with every token." :
+      v === "window_glu" ? "The window acts on 8σ(a), so it closes for large |a| on either side: a large activation is shut off, not passed." :
+      G.STE[v] ? "Forward pass in blue; the orange curve is the function the gradient comes from." :
+      "Hover the chart to read every curve at one a.";
+    document.getElementById("cap-curve").textContent = capc;
+
+    var sl = G.STE[v] ? G.siluGrad : G.LIFE2[v] ? function (a) { return G.siluGrad(a) * G.lifeRule(v, a > p.theta ? 1 : 0, state.n, p).m; } : slopeF(f);
+    document.getElementById("slope-title").textContent = G.STE[v] ? "Gradient used in training" : G.LIFE2[v] ? "Slope with the rule state held fixed" : "Slope dg/da";
+    var ss = [{ f: sl, color: "var(--s1)", label: G.STE[v] ? "d silu(a)/da (straight-through)" : "dg/da of " + v }];
+    if (state.refs) ss.push({ f: function () { return 1; }, color: "var(--ref)", label: "bilinear (slope 1)", width: 1.5, fit: false });
+    var ks = document.getElementById("keys-slope"); ks.replaceChildren();
+    ss.forEach(function (s) { keyLine(ks, s.color, s.label, { thin: s.width === 1.5 }); });
+    slopeBox.replaceChildren(); redrawSlope = function (W) {
+      lineChart(slopeBox, W, { x0: -4, x1: 4, series: ss, marker: state.a, minSpan: 1.5, cap: [-2.5, 4.5], height: 190, aria: "slope of " + v, xlabel: "a" });
+    };
+    redrawSlope(Math.floor(slopeBox.clientWidth) || 600);
+    var flat = { sine_glu: "Zero slope at a = Δ(k + ½): the gradient vanishes on every tread, and doubles on the risers.",
+      deadzone_sine_glu: "Zero slope at the integers, including a = 0, so a unit sitting in the off state gets almost no gradient.",
+      pwl_stair_glu: "Slope 0.25 on the treads and 1.75 on the risers: never zero, thanks to the 25% blend with a.",
+      quant_mid: "The real forward slope is 0 between the jumps, so without the straight-through trick no gradient would flow.",
+      quant_round: "The real forward slope is 0 between the jumps, so without the straight-through trick no gradient would flow.",
+      relu2_glu: "Slope 2a for a > 0, so large activations get large gradients.",
+      bilinear: "Slope 1 everywhere: every unit always gets the full gradient." };
+    document.getElementById("cap-slope").textContent = flat[v] || (G.LIFE2[v]
+      ? "silu's slope times the modulation m. The backward pass adds two smooth surrogates, one through the aliveness threshold and one through the rule window; that is how θ, γ and the window edges learn."
+      : "Where the slope is near zero, training barely moves a unit with that pre-activation.");
+
+    var upfig = document.getElementById("upfig");
+    upfig.hidden = !(v === "drelu" || v === "sine_up");
+    if (!upfig.hidden) {
+      var us = [{ f: function (b) { return G.up(v, b, p); }, color: "var(--s1)", label: "u(b)" }, { f: function (b) { return b; }, color: "var(--ref)", label: "u = b, every other gate", width: 1.5, fit: false }];
+      var ku = document.getElementById("keys-up"); ku.replaceChildren(); us.forEach(function (s) { keyLine(ku, s.color, s.label, { thin: s.width === 1.5 }); });
+      upBox.replaceChildren(); redrawUp = function (W) { lineChart(upBox, W, { x0: -4, x1: 4, series: us, minSpan: 2, height: 190, aria: "value branch", xname: "b", xlabel: "b" }); };
+      redrawUp(Math.floor(upBox.clientWidth) || 600);
+    }
+  }
+  var redrawCurve = function () {}, redrawSlope = function () {}, redrawUp = function () {};
+  [[curveBox, function (W) { redrawCurve(W); }], [slopeBox, function (W) { redrawSlope(W); }], [upBox, function (W) { redrawUp(W); }]].forEach(function (p) {
+    var last = 0;
+    new ResizeObserver(function () { var w = Math.floor(p[0].clientWidth); if (w > 0 && w !== last) { last = w; p[0].replaceChildren(); p[1](w); } }).observe(p[0]);
+  });
+
+  /* live layer */
+  var N = 64, BLK = 8, PERIOD = 1800, MOVE = 650;
+  function gauss() { var u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function sample() { var a = [], b = []; for (var i = 0; i < N; i++) { a.push(gauss() * state.sigma); b.push(gauss() * state.sigma); } return { a: a, b: b }; }
+  var disp = sample(), from = { a: disp.a.slice(), b: disp.b.slice() }, to = disp, t0 = 0, moving = false, lastTok = performance.now(), dirty = true, L = [];
+  function newToken(now) { from = { a: disp.a.slice(), b: disp.b.slice() }; to = sample(); t0 = now; moving = true; lastTok = now; }
+  var C = {};
+  function readColors() {
+    var cs = getComputedStyle(document.documentElement);
+    ["--s1", "--s2", "--ink", "--ink-2", "--muted", "--axis", "--grid", "--chip", "--surface", "--off-bg", "--off-line", "--s1-wash", "--ref"].forEach(function (k) { C[k] = cs.getPropertyValue(k).trim(); });
+    dirty = true;
+  }
+  readColors();
+  if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { readColors(); redrawAll(); });
+  new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
+
+  function sizeCanvas(cv) {
+    if (!cv.dataset.h) cv.dataset.h = cv.getAttribute("height");     /* CSS height; the attribute becomes the backing-store height */
+    var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = parseInt(cv.dataset.h, 10);
+    if (cv._w !== w || cv._dpr !== dpr) { cv._w = w; cv._dpr = dpr; cv.width = Math.round(w * dpr); cv.style.height = h + "px"; cv.height = Math.round(h * dpr); }
+    var c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); return { c: c, w: w, h: h };
+  }
+  var strip = document.getElementById("strip"), ring = document.getElementById("ring");
+  [strip, ring].forEach(function (cv) { new ResizeObserver(function () { dirty = true; }).observe(cv); });
+  var STRIP = { lab: 74, top: 8, rowH: 78, blk: 26 };
+  function neighbours(i) { if (state.v === "conway2d_swiglu") return G.mooreNeighbours(i, N); var out = []; for (var k = 1; k <= G.RADIUS; k++) { out.push((i + k) % N, (i - k + N) % N); } return out; }
+
+  function drawStrip() {
+    var s = sizeCanvas(strip), c = s.c, W = s.w, x0 = STRIP.lab, uw = (W - x0 - 4) / N, bw = Math.max(1, uw - (uw > 6 ? 2 : 1));
+    c.clearRect(0, 0, W, s.h);
+    var sA = 3 * state.sigma, sG = state.v === "life_glu" ? 1 : sA, sH = 0;
+    L.forEach(function (r) { sH = Math.max(sH, Math.abs(r.h)); });
+    sH = Math.max(sH, 1e-6);
+    var rows = [["a", "a = W₁x", function (r) { return r.a / sA; }], ["g", "g(a)", function (r) { return r.g / sG; }], ["h", "h = g · u", function (r) { return r.h / sH; }]];
+    var nb = state.hover >= 0 && G.usesNeighbours(state.v) ? neighbours(state.hover) : [];
+    if (state.hover >= 0) {
+      c.fillStyle = C["--chip"]; c.fillRect(x0 + state.hover * uw, STRIP.top - 4, uw, STRIP.rowH * 3 + 4);
+      c.fillStyle = C["--s1-wash"]; nb.forEach(function (j) { c.fillRect(x0 + j * uw, STRIP.top - 4, uw, STRIP.rowH * 3 + 4); });
+    }
+    c.font = "14px " + getComputedStyle(document.body).fontFamily;
+    rows.forEach(function (row, ri) {
+      var top = STRIP.top + ri * STRIP.rowH, mid = top + STRIP.rowH / 2, half = STRIP.rowH / 2 - 6;
+      c.fillStyle = C["--ink-2"]; c.textBaseline = "middle"; c.fillText(row[1], 2, mid);
+      c.strokeStyle = C["--axis"]; c.lineWidth = 1; c.beginPath(); c.moveTo(x0, mid + 0.5); c.lineTo(W - 4, mid + 0.5); c.stroke();
+      L.forEach(function (r, i) {
+        var val = Math.max(-1, Math.min(1, row[2](r))), px = x0 + i * uw + (uw - bw) / 2, hgt = val * half;
+        var off = Math.abs(r.g) < 0.05;
+        if (row[0] !== "a" && ((row[0] === "g" && r.g === 0) || (row[0] === "h" && r.h === 0))) {
+          c.fillStyle = C["--muted"]; c.beginPath(); c.arc(px + bw / 2, mid, Math.min(2.5, bw / 2 + 0.5), 0, 2 * Math.PI); c.fill(); return;
+        }
+        c.fillStyle = row[0] === "a" ? C["--ref"] : (off ? C["--muted"] : C["--s1"]);
+        var yTop = hgt >= 0 ? mid - hgt : mid, hh = Math.max(1, Math.abs(hgt));
+        c.fillRect(px, yTop, bw, hh);
+      });
+    });
+    var by = STRIP.top + 3 * STRIP.rowH + 6;
+    for (var k = 0; k < N / BLK; k++) {
+      var allOff = true; for (var i = k * BLK; i < (k + 1) * BLK; i++) if (Math.abs(L[i].g) >= 0.05) { allOff = false; break; }
+      var bx = x0 + k * BLK * uw + 1, bwid = BLK * uw - 2;
+      if (allOff) { c.fillStyle = C["--off-bg"]; c.fillRect(bx, by, bwid, 12); }
+      c.strokeStyle = allOff ? C["--off-line"] : C["--axis"]; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(bx + 0.5, by); c.lineTo(bx + 0.5, by + 12); c.lineTo(bx + bwid - 0.5, by + 12); c.lineTo(bx + bwid - 0.5, by); c.stroke();
+    }
+    c.fillStyle = C["--muted"]; c.fillText("blocks", 2, by + 6);
+  }
+
+  function gridGeom(W, Hh) {
+    var rc = G.gridShape(N), cell = (Math.min(W, Hh) - 24) / Math.max(rc[0], rc[1]);
+    return { R: rc[0], C: rc[1], cell: cell, x0: (W - cell * rc[1]) / 2, y0: (Hh - cell * rc[0]) / 2 };
+  }
+  function drawGrid(c, W, Hh) {               /* conway2d_swiglu: the units on an 8 x 8 torus */
+    var gg = gridGeom(W, Hh), nb = state.hover >= 0 ? G.mooreNeighbours(state.hover, N) : [];
+    L.forEach(function (r, i) {
+      var x = gg.x0 + (i % gg.C) * gg.cell, y = gg.y0 + Math.floor(i / gg.C) * gg.cell, pad = Math.max(1.5, gg.cell * 0.08), w = gg.cell - 2 * pad;
+      if (nb.indexOf(i) >= 0) { c.fillStyle = C["--s1-wash"]; c.fillRect(x, y, gg.cell, gg.cell); }
+      c.fillStyle = r.p ? C["--s1"] : C["--surface"]; c.fillRect(x + pad, y + pad, w, w);
+      c.strokeStyle = C["--axis"]; c.lineWidth = 1; c.strokeRect(x + pad + 0.5, y + pad + 0.5, w - 1, w - 1);
+      if (r.r > 0.5) { c.strokeStyle = C["--s2"]; c.lineWidth = 3; c.strokeRect(x + pad + 2, y + pad + 2, w - 4, w - 4); }
+      if (i === state.hover) { c.strokeStyle = C["--ink"]; c.lineWidth = 2; c.strokeRect(x + 1, y + 1, gg.cell - 2, gg.cell - 2); }
+    });
+  }
+  function drawRing() {
+    if (document.getElementById("life-on").hidden) return;
+    var s = sizeCanvas(ring), c = s.c, W = s.w, Hh = s.h, cx = W / 2, cy = Hh / 2, R = Math.min(W, Hh) / 2 - 22;
+    c.clearRect(0, 0, W, Hh);
+    if (state.v === "conway2d_swiglu") { drawGrid(c, W, Hh); return; }
+    var life2 = !!G.LIFE2[state.v];
+    var gmax = 1e-6; L.forEach(function (r) { gmax = Math.max(gmax, Math.abs(r.g)); });
+    c.strokeStyle = C["--grid"]; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, R, 0, 2 * Math.PI); c.stroke();
+    var pos = function (i) { var t = -Math.PI / 2 + 2 * Math.PI * i / N; return [cx + R * Math.cos(t), cy + R * Math.sin(t)]; };
+    if (state.hover >= 0 && G.usesNeighbours(state.v)) {
+      var t0a = -Math.PI / 2 + 2 * Math.PI * (state.hover - G.RADIUS) / N, t1a = -Math.PI / 2 + 2 * Math.PI * (state.hover + G.RADIUS) / N;
+      c.strokeStyle = C["--s2"]; c.lineWidth = 9; c.lineCap = "round"; c.globalAlpha = 0.35; c.beginPath(); c.arc(cx, cy, R, t0a, t1a); c.stroke(); c.globalAlpha = 1;
+    }
+    L.forEach(function (r, i) {
+      var p = pos(i), mag = Math.min(1, Math.abs(r.g) / gmax), rad = 2.5 + 5 * mag;
+      c.fillStyle = C["--surface"]; c.beginPath(); c.arc(p[0], p[1], rad + 2, 0, 2 * Math.PI); c.fill();
+      if (life2) {                            /* round 3: filled = alive, orange ring = rule on */
+        rad = 5.5;
+        if (r.r > 0.5) { c.strokeStyle = C["--s2"]; c.lineWidth = 2.5; c.beginPath(); c.arc(p[0], p[1], 8, 0, 2 * Math.PI); c.stroke(); }
+        if (r.p) { c.fillStyle = C["--s1"]; c.beginPath(); c.arc(p[0], p[1], rad, 0, 2 * Math.PI); c.fill(); }
+        else { c.strokeStyle = C["--muted"]; c.lineWidth = 1.5; c.beginPath(); c.arc(p[0], p[1], 3.5, 0, 2 * Math.PI); c.stroke(); }
+      }
+      else if (Math.abs(r.g) < 0.05) { c.strokeStyle = C["--muted"]; c.lineWidth = 1.5; c.beginPath(); c.arc(p[0], p[1], 3, 0, 2 * Math.PI); c.stroke(); }
+      else { c.fillStyle = C["--s1"]; c.globalAlpha = 0.35 + 0.65 * mag; c.beginPath(); c.arc(p[0], p[1], rad, 0, 2 * Math.PI); c.fill(); c.globalAlpha = 1; }
+      if (i === state.hover) { c.strokeStyle = C["--ink"]; c.lineWidth = 1.5; c.beginPath(); c.arc(p[0], p[1], rad + 3.5, 0, 2 * Math.PI); c.stroke(); }
+    });
+    c.fillStyle = C["--muted"]; c.textAlign = "center"; c.textBaseline = "middle"; c.font = "14px " + getComputedStyle(document.body).fontFamily;
+    c.fillText(state.hover >= 0 ? "unit " + state.hover : "hover a unit", cx, cy - 8);
+    if (state.hover >= 0) {
+      var r = L[state.hover];
+      if (life2) { c.fillText((r.p ? "alive" : "dead") + ", n = " + r.n + ", z = " + r.z, cx, cy + 10); c.fillText("rule " + (r.r > 0.5 ? "on" : "off") + ", m = " + r.m.toFixed(2), cx, cy + 28); }
+      else c.fillText("g = " + num(r.g, 3) + (r.n != null ? "   n = " + r.n.toFixed(2) : ""), cx, cy + 10);
+    }
+    c.textAlign = "start";
+  }
+
+  var counters = document.getElementById("counters");
+  function renderCounters() {
+    var z = 0, near = 0, blocks = 0;
+    L.forEach(function (r) { if (r.h === 0) z++; if (Math.abs(r.g) < 0.05) near++; });
+    for (var k = 0; k < N / BLK; k++) { var all = true; for (var i = k * BLK; i < (k + 1) * BLK; i++) if (Math.abs(L[i].g) >= 0.05) { all = false; break; } if (all) blocks++; }
+    counters.replaceChildren();
+    var items = [["Exact zeros in h", z + " / " + N], ["|g| < 0.05", near + " / " + N], ["8-unit blocks off", blocks + " / " + N / BLK]];
+    if (G.LIFE2[state.v]) {
+      var alive = 0, on = 0; L.forEach(function (r) { alive += r.p; if (r.r > 0.5) on++; });
+      items.push(["Alive", alive + " / " + N], ["Rule on", on + " / " + N]);
+    }
+    items.forEach(function (c) {
+      var s = H("span", null, c[0] + " ", counters); H("b", null, c[1], s);
+    });
+  }
+  function renderValues() {
+    var det = document.getElementById("values"); if (!det.open) return;
+    var box = document.getElementById("vt"); box.replaceChildren();
+    var t = H("table", null, null, box), hr = H("tr", null, null, H("thead", null, null, t)), nbs = G.usesNeighbours(state.v);
+    var l2 = !!G.LIFE2[state.v];
+    ["unit", "a", "b", "g", "u", "h"].concat(l2 ? ["alive", "n", "z", "rule", "m"] : nbs ? ["n"] : []).forEach(function (h) { H("th", null, h, hr); });
+    var tb = H("tbody", null, null, t);
+    L.forEach(function (r, i) {
+      var tr = H("tr", null, null, tb);
+      [String(i), num(r.a, 3), num(r.b, 3), num(r.g, 3), num(r.u, 3), num(r.h, 3)]
+        .concat(l2 ? [String(r.p), String(r.n), String(r.z), r.r > 0.5 ? "on" : "off", r.m.toFixed(3)] : nbs ? [r.n.toFixed(2)] : [])
+        .forEach(function (x) { H("td", null, x, tr); });
+    });
+  }
+  document.getElementById("values").addEventListener("toggle", renderValues);
+
+  var tipAt = [0, 0];
+  function unitTip(i, cx, cy) {
+    tipAt = [cx, cy];
+    var r = L[i], lines = [["h = " + num(r.h, 3), "unit " + i], ["", "a " + num(r.a, 3) + " · g " + num(r.g, 3)], ["", "b " + num(r.b, 3) + " · u " + num(r.u, 3)]];
+    if (G.LIFE2[state.v]) lines.push(["", (r.p ? "alive" : "dead") + " · " + r.n + " alive neighbours · z = " + r.z + " · rule " + (r.r > 0.5 ? "on" : "off") + " · m = " + r.m.toFixed(3)]);
+    else if (r.n != null) lines.push(["", "neighbours n " + r.n.toFixed(2) + " · own p = σ(a) " + r.p.toFixed(2)]);
+    showTip(lines, cx, cy);
+  }
+  strip.addEventListener("pointermove", function (e) {
+    var b = strip.getBoundingClientRect(), uw = (b.width - STRIP.lab - 4) / N, i = Math.floor((e.clientX - b.left - STRIP.lab) / uw);
+    if (i < 0 || i >= N) { state.hover = -1; hideTip(); dirty = true; return; }
+    state.hover = i; dirty = true; unitTip(i, e.clientX, e.clientY);
+  });
+  strip.addEventListener("pointerleave", function () { state.hover = -1; dirty = true; hideTip(); });
+  strip.addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    e.preventDefault(); state.hover = ((state.hover < 0 ? 0 : state.hover) + (e.key === "ArrowRight" ? 1 : N - 1)) % N; dirty = true;
+    var b = strip.getBoundingClientRect(); unitTip(state.hover, b.left + STRIP.lab + (state.hover + 0.5) * (b.width - STRIP.lab - 4) / N, b.top + 20);
+  });
+  strip.addEventListener("blur", function () { state.hover = -1; dirty = true; hideTip(); });
+  ring.addEventListener("pointermove", function (e) {
+    var b = ring.getBoundingClientRect(), W = b.width, Hh = b.height, cx = W / 2, cy = Hh / 2, R = Math.min(W, Hh) / 2 - 22;
+    var px = e.clientX - b.left, py = e.clientY - b.top, best = -1, bd = 16 * 16;
+    if (state.v === "conway2d_swiglu") {
+      var gg = gridGeom(W, Hh), col = Math.floor((px - gg.x0) / gg.cell), row = Math.floor((py - gg.y0) / gg.cell);
+      best = col >= 0 && col < gg.C && row >= 0 && row < gg.R ? row * gg.C + col : -1;
+      state.hover = best; dirty = true; if (best >= 0) unitTip(best, e.clientX, e.clientY); else hideTip();
+      return;
+    }
+    for (var i = 0; i < N; i++) { var t = -Math.PI / 2 + 2 * Math.PI * i / N, dx = cx + R * Math.cos(t) - px, dy = cy + R * Math.sin(t) - py, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = i; } }
+    state.hover = best; dirty = true; if (best >= 0) unitTip(best, e.clientX, e.clientY); else hideTip();
+  });
+  ring.addEventListener("pointerleave", function () { state.hover = -1; dirty = true; hideTip(); });
+
+  /* neighbour-rule chart (life gates) */
+  var nbBox = document.getElementById("nbchart"), nbRug = null, nbBlend = null, nbScale = null;
+  function renderLifeStatic() {
+    var v = state.v, on = !!LIFE[v];
+    document.getElementById("life-on").hidden = !on; document.getElementById("life-off").hidden = on;
+    if (!on) return;
+    var p = P(), kb = document.getElementById("keys-nb"); kb.replaceChildren();
+    var texts = {
+      life_glu: "Conway's rule: a live cell survives with 2 or 3 live neighbours, and a dead cell is born with exactly 3. life_glu softens both. Aliveness is p = σ(a), the count n adds up the aliveness of the 8 nearest units on the ring, and each rule becomes a bell over n. The gate is the survive bell weighted by p plus the birth bell weighted by 1 − p.",
+      lenia_glu: "lenia_glu keeps the bilinear signal a and lets the neighbourhood set its gain. A unit passes its a when its 8 neighbours' summed aliveness n falls inside a learned bell window. It is the smooth, continuous cousin of Life, after the Lenia cellular automata.",
+      window_glu: "window_glu is the control for lenia_glu: the same learned bell window, fed by the unit's own activity 8σ(a) instead of its neighbours. If lenia_glu only beats it because of the window, the two should tie; the study found lenia_glu ahead by 0.011.",
+      conway_swiglu: "Round 3 keeps Conway's rule exact. Each unit is alive (a > θ) or dead, n counts its alive neighbours among the 8 nearest on the ring, and z = 2n + s puts both into one number: alive units have odd z, dead units even z. The trapezoid is 1 for z = 5, 6 and 7 and 0 everywhere else, which is B3/S23. The rule then decides how much of silu(a) passes.",
+      lenia_swiglu: "The same exact rule, but each unit learns where the trapezoid's two edges sit, starting from Conway's 4 and 7. Training nudged them to 4.24 and 6.83, so the rule switches on slightly later and off slightly earlier.",
+      conway2d_swiglu: "The same exact rule on a 2-D board: units sit on a torus grid and count their 8 Moore neighbours, as cells do in Conway's Game of Life. Hover a cell to see its neighbourhood."
+    };
+    document.getElementById("life-text").textContent = texts[v];
+    var l2 = !!G.LIFE2[v];
+    document.getElementById("ring-cap").textContent = l2
+      ? "Filled: alive (a > θ). Orange outline: the rule is on, so m = 1. Every other unit is damped to m = 1 − tanh(γ)" + (p.tg ? " = " + (1 - p.tg).toFixed(2) + "." : ", which is 1 at the start of training.")
+      : "Dot size and shade show |g|; hollow dots have |g| < 0.05. Hover a unit to see its 8 neighbours.";
+    var xname = l2 ? "z = 2n + s" : v === "window_glu" ? "8σ(a), the unit's own activity" : "n, summed σ(a) of the 8 neighbours";
+    document.getElementById("nb-title").textContent = l2 ? "Conway's rule over z = 2n + s" : v === "life_glu" ? "Survive and birth bells over n" : "The learned window";
+    var series, x1 = l2 ? 17 : 8;
+    if (l2) {
+      var e = G.lifeRule(v, 0, 0, p);
+      series = [{ f: function (z) { return G.trapezoid(z, e.lo, e.hi); }, color: "var(--s1)", label: "forward: trapezoid, edges " + e.lo.toFixed(2) + " / " + e.hi.toFixed(2) },
+                { f: function (z) { return G.smoothWindow(z, e.lo, e.hi); }, color: "var(--s2)", label: "backward: smooth window" }];
+    } else if (v === "life_glu") {
+      series = [{ f: function (n) { return G.bell(n, G.LIFE_SURVIVE[0], G.LIFE_SURVIVE[1]); }, color: "var(--s1)", label: "survive: bell(n; 2.5, 1)" },
+                { f: function (n) { return G.bell(n, G.LIFE_BIRTH[0], G.LIFE_BIRTH[1]); }, color: "var(--s2)", label: "birth: bell(n; 3, 0.6)" }];
+      keyLine(kb, "var(--ink-2)", "g for the hovered unit's p", { thin: true });
+    } else {
+      series = [{ f: function (n) { return G.bell(n, p.centre, p.width); }, color: "var(--s1)", label: "gain bell(·; " + p.centre.toFixed(2) + ", " + p.width.toFixed(2) + ")" }];
+    }
+    series.forEach(function (s) { keyLine(kb, s.color, s.label); });
+    keyLine(kb, "var(--muted)", "ticks: the 64 units now", { thin: true });
+    document.getElementById("nb-cap").textContent = l2
+      ? "Dots: the 18 possible values of z. The rule is on only where the trapezoid reaches 1: survive with 2 or 3 alive neighbours (z = 5, 7) or be born with 3 (z = 6). Ticks: the 64 units now."
+      : v === "window_glu"
+      ? "Each tick is one unit's own 8σ(a). Units whose ticks fall outside the bell are shut off, whatever their neighbours do."
+      : v === "lenia_glu" ? "Each tick is one unit's neighbour count. With random activations n clusters near 4, the bell's starting centre; training narrowed the width from 2 to about 1.35."
+      : "Each tick is one unit's neighbour count. With random activations n sits near 4, past both bells, so most gates stay small: at the start of training the mean gate is about 0.14.";
+    nbBox.replaceChildren();
+    var draw = function (W) {
+      var ch = lineChart(nbBox, W, { x0: 0, x1: x1, y0: -0.12, y1: 1.08, series: series, height: 230, aria: "neighbour rule for " + v, xname: l2 ? "z" : v === "window_glu" ? "8σ(a)" : "n", xlabel: xname,
+        after: function (svg, x, y) {
+          if (l2) for (var z = 0; z <= 17; z++) {
+            var on = G.trapezoid(z, e.lo, e.hi);
+            S("circle", { cx: x(z), cy: y(on), r: 4, fill: on > 0.5 ? "var(--s1)" : "var(--surface)", stroke: on > 0.5 ? "var(--surface)" : "var(--muted)", "stroke-width": on > 0.5 ? 2 : 1.5 }, svg);
+          }
+          nbBlend = v === "life_glu" ? S("path", { fill: "none", stroke: "var(--ink-2)", "stroke-width": 1.5, "stroke-linejoin": "round" }, svg) : null;
+          nbRug = S("g", {}, svg); nbScale = { x: x, y: y };
+        } });
+    };
+    draw(Math.floor(nbBox.clientWidth) || 500);
+    nbBox._draw = draw;
+  }
+  (function () { var last = 0; new ResizeObserver(function () { var w = Math.floor(nbBox.clientWidth); if (w > 0 && w !== last && nbBox._draw && LIFE[state.v]) { last = w; nbBox.replaceChildren(); nbBox._draw(w); dirty = true; } }).observe(nbBox); })();
+  function updateLifeDynamic() {
+    if (!LIFE[state.v] || !nbRug) return;
+    var v = state.v, x = nbScale.x, y = nbScale.y; nbRug.replaceChildren();
+    L.forEach(function (r, i) {
+      var val = G.LIFE2[v] ? r.z : v === "window_glu" ? 8 * r.p : r.n;
+      S("line", { x1: x(val), x2: x(val), y1: y(-0.1), y2: y(-0.02), stroke: i === state.hover ? "var(--ink)" : "var(--muted)", "stroke-width": i === state.hover ? 2.5 : 1 }, nbRug);
+    });
+    var ro = document.getElementById("nb-readout");
+    if (state.hover >= 0) {
+      var r = L[state.hover];
+      ro.textContent = "unit " + state.hover + ": " + (G.LIFE2[v] ? (r.p ? "alive" : "dead") + ", n = " + r.n + ", z = " + r.z + ", rule " + (r.r > 0.5 ? "on" : "off") + ", m = " + r.m.toFixed(2)
+        : (v === "window_glu" ? "8σ(a) = " + (8 * r.p).toFixed(2) : "n = " + r.n.toFixed(2)) + ", g = " + num(r.g, 3));
+    }
+    else ro.textContent = "";
+    if (nbBlend) {
+      var pp = state.hover >= 0 ? L[state.hover].p : 0.5, d = "";
+      for (var k = 0; k <= 160; k++) { var n = 8 * k / 160, gv = pp * G.bell(n, G.LIFE_SURVIVE[0], G.LIFE_SURVIVE[1]) + (1 - pp) * G.bell(n, G.LIFE_BIRTH[0], G.LIFE_BIRTH[1]); d += (k ? "L" : "M") + x(n).toFixed(1) + "," + y(gv).toFixed(1); }
+      nbBlend.setAttribute("d", d);
+    }
+  }
+
+  /* main loop */
+  function frame(now) {
+    if (state.playing && !moving && now - lastTok > PERIOD) newToken(now);
+    if (moving) {
+      var k = REDUCE ? 1 : Math.min(1, (now - t0) / MOVE), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      disp = { a: from.a.map(function (x, i) { return x + (to.a[i] - x) * e; }), b: from.b.map(function (x, i) { return x + (to.b[i] - x) * e; }) };
+      if (k >= 1) { moving = false; disp = { a: to.a.slice(), b: to.b.slice() }; renderValuesSoon = true; }
+      dirty = true;
+    }
+    if (dirty) {
+      L = G.layer(state.v, disp.a, disp.b, P());
+      drawStrip(); drawRing(); renderCounters(); updateLifeDynamic();
+      if (state.hover >= 0 && !tip.hidden) unitTip(state.hover, tipAt[0], tipAt[1]);   /* keep the open tooltip's numbers current */
+      if (renderValuesSoon) { renderValues(); renderValuesSoon = false; }
+      dirty = false;
+    }
+    requestAnimationFrame(frame);
+  }
+  var renderValuesSoon = false;
+  var playBtn = document.getElementById("play");
+  function syncPlay() { playBtn.textContent = state.playing ? "Pause" : "Play"; playBtn.setAttribute("aria-pressed", String(state.playing)); }
+  playBtn.addEventListener("click", function () { state.playing = !state.playing; if (state.playing) lastTok = 0; syncPlay(); });
+  document.getElementById("next").addEventListener("click", function () { newToken(performance.now()); });
+
+  /* selection */
+  function select(v, push) {
+    if (!STUDY[v]) return;
+    state.v = v; state.hover = -1;
+    L = G.layer(v, disp.a, disp.b, P());          /* keep the per-unit values in step with the gate before the next frame */
+    document.querySelectorAll("#picker button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.v === v)); });
+    if (push && location.hash !== "#" + slug(v)) { try { history.replaceState(null, "", "#" + slug(v)); } catch (err) { location.hash = slug(v); } }
+    renderHead(); syncControls(); drawShape(); renderLifeStatic(); dirty = true; renderValuesSoon = true;
+  }
+  function fromHash() { var h = (location.hash || "").slice(1).replace(/-/g, "_"); return STUDY[h] ? h : null; }
+  window.addEventListener("hashchange", function () { var v = fromHash(); if (v && v !== state.v) select(v, false); });
+  select(fromHash() || state.v, false);
+  syncPlay();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

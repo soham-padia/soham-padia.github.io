@@ -1,5 +1,15 @@
 [
   {
+    "slug": "glu-gate-lab",
+    "file": "glu-gate-lab/post.md",
+    "plate": 1,
+    "title": "GLU Gate Lab",
+    "date": "2026-10-31",
+    "tags": ["Interpretability", "Activations", "Interactive"],
+    "summary": "An interactive lab for the 22 feed-forward gates of my stairs study: their shapes, their slopes, and a live layer of hidden units.",
+    "excerpt": "An interactive lab for the 22 feed-forward gates of my stairs study. On loss nothing beat SwiGLU; the exact Game of Life rule on top of it tied. See each gate's shape, its slope, and a live layer of hidden units."
+  },
+  {
     "slug": "model-whisperers",
     "file": "model-whisperers/post.md",
     "plate": 5,
