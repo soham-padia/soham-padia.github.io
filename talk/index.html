@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Talk to me about — Soham Padia</title>
+<meta name="description" content="Things Soham Padia would love to talk about, outside of work: Dexter, and Pantheon and whole brain emulation.">
+<meta name="author" content="Soham Padia">
+<meta name="theme-color" content="#F3F0E8">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/icon/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/img/icon/icon-192.png">
+<link rel="apple-touch-icon" href="/img/icon/apple-touch-icon.png">
+<link rel="canonical" href="https://soham-padia.github.io/talk/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Soham Padia">
+<meta property="og:url" content="https://soham-padia.github.io/talk/">
+<meta property="og:title" content="Talk to me about">
+<meta property="og:description" content="Things I’d love to talk about, outside of work.">
+<meta property="og:image" content="https://soham-padia.github.io/img/share/plate-7.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Plate VII. A dumb pirate cat, printed in cyanotype.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/* Talk to me about: the Notes paper and ink, one column. To add a topic, copy an <li>. */
+:root{
+  --paper:#F3F0E8; --ink:#1D3344; --ink-soft:#4E6575; --ink-faint:#6B7E8A; --rule:#D9D3C5;
+  --serif:"EB Garamond","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  color-scheme:light;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html{ background:var(--paper); }
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif); font-size:clamp(19px, 1rem + .3vw, 21px); line-height:1.6;
+  font-variant-numeric:oldstyle-nums; -webkit-font-smoothing:antialiased;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+}
+a{ color:inherit; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:.2em; text-decoration-color:var(--ink-faint); }
+a:hover{ text-decoration-color:currentColor; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; border-radius:2px; }
+
+.site-top{ display:flex; justify-content:space-between; align-items:baseline; gap:.4rem 1rem; flex-wrap:wrap; padding:1.5rem clamp(1.5rem, 4vw, 4rem) 0 clamp(1.5rem, 6vw, 6rem); font-size:.95em; }
+.site-top .name{ font-style:italic; text-decoration:none; }
+.site-links{ display:flex; flex-wrap:wrap; gap:.4rem 1.5rem; }
+.site-top [aria-current="page"]{ text-decoration-color:currentColor; }
+
+main{ max-width:40rem; margin:0 auto; padding:clamp(3.5rem, 11vh, 7rem) clamp(1.25rem, 5vw, 3rem) 5rem; }
+h1{ font-weight:400; margin:0 0 .5em; font-size:clamp(2.1rem, 1.3rem + 2.6vw, 3.1rem); line-height:1.08; letter-spacing:-.008em; }
+.lede{ margin:0 0 2.2em; color:var(--ink-soft); text-wrap:pretty; }
+.topics{ list-style:none; margin:0; padding:0; }
+.topics li{ margin:0 0 1.8em; }
+.topics h2{ font-weight:400; font-style:italic; font-size:1.7em; line-height:1.15; margin:0 0 .15em; }
+.topics p{ margin:0; text-wrap:pretty; }
+.topics p + p{ margin-top:.7em; }
+/* a spoiler stays folded until asked for */
+.topics details{ margin-top:.9em; padding:.1em 0 .1em 1.1em; border-left:2px solid var(--rule); }
+.topics summary{ cursor:pointer; color:var(--ink-soft); font-style:italic; }
+.topics details[open] > summary{ margin-bottom:.6em; }
+
+/* Each topic has a small popup by its title, shown on hover or focus (on touch
+   screens, once it's in view). Dexter's splatters the page; Pantheon's uploads it. */
+.topic{ position:relative; }
+.topics h2 a{ text-decoration-color:transparent; }
+.topics h2 a:hover{ text-decoration-color:currentColor; }
+.tease{
+  position:absolute; top:.55em; right:0; z-index:6;   /* above the blood */
+  opacity:0; transform:translateY(4px) scale(.96); transform-origin:right center;
+  transition:opacity .25s ease, transform .25s ease; pointer-events:none;
+}
+.topic:hover .tease, .topic:focus-within .tease, .topic.seen .tease{ opacity:1; transform:none; pointer-events:auto; }
+.fun{
+  appearance:none; cursor:pointer; font:inherit; font-size:.9em; font-style:italic;
+  color:var(--ink); background:#FBFAF6; border:1px solid var(--rule); border-radius:3px;
+  padding:.2em .75em; box-shadow:0 4px 14px rgba(29,51,68,.12);
+}
+.fun:hover{ border-color:var(--ink-faint); }
+#splat{ position:absolute; top:0; left:0; z-index:5; pointer-events:none; transition:opacity .9s ease; }
+/* Pantheon: the page's signal breaks up, the way a UI's does */
+.uploading main, .uploading .site-top{ filter:url(#ui-glitch); }
+.uploading main{ text-shadow:1.5px 0 rgba(200,30,70,.35), -1.5px 0 rgba(20,160,220,.35); }
+@media (prefers-reduced-motion: reduce){
+  .tease{ transition:none; }
+  #splat{ transition:none; }
+  .uploading main, .uploading .site-top{ filter:none; }
+}
+
+/* The critique's diagram: steps fade in while the spoiler is open (script below).
+   Without the script, every step and its caption show at once. */
+.loop{ margin:1em 0 1.1em; }
+.loop svg{ display:block; width:100%; height:auto; }
+.loop text{ font-family:var(--serif); fill:var(--ink); font-size:20px; }
+.loop .lab{ font-style:italic; }
+.loop .tiny{ font-size:17px; font-style:italic; fill:var(--ink-soft); }
+.loop .quote{ font-size:19px; font-style:italic; }
+.loop .story, .loop .mark{ font-size:18px; font-style:italic; fill:#B0602A; }
+.loop .mid{ text-anchor:middle; } .loop .end{ text-anchor:end; }
+.loop .q{ fill:#B0602A; font-size:24px; }
+.loop .u{ stroke:var(--ink); stroke-width:1; }
+.loop .root{ fill:#FBFAF6; stroke-width:2; }
+.loop .u1{ fill:#E4E5E1; } .loop .u2{ fill:#DCE0DF; } .loop .u3{ fill:#D3D9DB; }
+.loop .who{ fill:#1F4E8C; }
+.loop .bound, .loop .ghost{ fill:none; stroke:var(--ink-faint); stroke-dasharray:5 6; }
+.loop .hint{ fill:none; stroke:#B0602A; stroke-width:2; stroke-linecap:round; }
+.loop .hint.dashed{ stroke-dasharray:3 5; }
+.loop .pulse{ fill:#B0602A; transition:opacity .6s ease; }
+.loop .pulse.gone{ opacity:0; }   /* the dot goes round once, then leaves */
+.loop-steps{ margin:.8em 0 0; padding-left:1.3em; }
+.loop-steps li{ margin:0 0 .4em; }
+.loop.anim .loop-steps{ display:none; }
+.loop.anim .s{ opacity:0; transition:opacity .7s ease var(--d, 0s); }
+.loop.anim .s.on{ opacity:1; }
+.loop.anim .draw{ stroke-dasharray:var(--len); stroke-dashoffset:var(--len); transition:stroke-dashoffset .6s ease var(--dd, .35s); }
+.loop.anim .s.on .draw{ stroke-dashoffset:0; }
+.loop-cap{ margin:.7em 0 .5em; min-height:4.8em; }
+.loop-ctl{ display:flex; align-items:baseline; gap:1em; color:var(--ink-faint); font-size:.9em; }
+.loop-ctl button{ appearance:none; background:none; border:0; padding:0; font:inherit; color:var(--ink); cursor:pointer; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:.2em; text-decoration-color:var(--ink-faint); }
+.loop-ctl button:disabled{ color:var(--ink-faint); cursor:default; text-decoration:none; }
+@media (prefers-reduced-motion: reduce){
+  .loop.anim .s, .loop.anim .draw{ transition:none; }
+  .loop .pulse{ display:none; }
+}
+.write{ margin:3em 0 0; padding-top:1.2em; border-top:1px solid var(--rule); }
+
+@media (max-width: 820px){
+  .site-top{ padding:.9rem 1.3rem 0; font-size:.88em; }
+  .site-links{ gap:.3rem 1rem; }
+}
+</style>
+</head>
+<body>
+<nav class="site-top" aria-label="Site">
+  <a class="name" href="/">Soham Padia</a>
+  <span class="site-links">
+    <a href="/blog">Notes</a>
+    <a href="/lab/glu-gates/">Lab</a>
+    <a href="mailto:padia.so@northeastern.edu">Email</a>
+    <a href="https://github.com/soham-padia">GitHub</a>
+    <a href="https://linkedin.com/in/soham-padia">LinkedIn</a>
+    <a href="/talk/" aria-current="page">Talk to me about…</a>
+  </span>
+</nav>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="ui-glitch" x="-5%" y="0" width="110%" height="100%" color-interpolation-filters="sRGB">
+    <!-- thin horizontal bands of noise; green is held at 0.5 so rows only slide sideways -->
+    <feTurbulence id="ui-noise" type="fractalNoise" baseFrequency="0.0015 0.35" numOctaves="1" seed="3" result="n"/>
+    <feComponentTransfer in="n" result="bands"><feFuncG type="linear" slope="0" intercept="0.5"/><feFuncA type="linear" slope="0" intercept="1"/></feComponentTransfer>
+    <feDisplacementMap id="ui-shift" in="SourceGraphic" in2="bands" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<canvas id="splat" aria-hidden="true" hidden></canvas>
+<main>
+  <h1>Talk to me about</h1>
+  <p class="lede">Things I’ll happily talk about for longer than I should, outside of work. If you love any of them too, write to me.</p>
+
+  <ul class="topics">
+    <li class="topic" data-fun="splatter">
+      <h2><a href="https://www.imdb.com/title/tt0773262/">Dexter</a></h2>
+      <div class="tease"><button type="button" class="fun">Be funny</button></div>
+      <p>Seeing Dexter awkwardly navigate the world is not only kind of funny but relatable, except I’m not a killer who kills serial killers. Sometimes Doakes lines like “You glide like a lizard on ice” run through my head when I’m doing nothing, and they always make me chuckle a little.</p>
+      <p>I haven’t watched past season 4. I’ve tried a few times, but what happened at the end of season 4 was so devastating that I somehow couldn’t get myself to keep going. I have, however, watched <cite>Dexter: New Blood</cite>, <cite>Resurrection</cite> and <cite>Original Sin</cite>.</p>
+    </li>
+    <li class="topic" data-fun="upload">
+      <h2><a href="https://www.imdb.com/title/tt11680642/">Pantheon</a></h2>
+      <div class="tease"><button type="button" class="fun">Upload me</button></div>
+      <p>Whole brain emulation has been on my mind like a seed ever since I read <a href="https://waitbutwhy.com/2015/01/artificial-intelligence-revolution-1.html">Wait But Why’s posts on superintelligence</a> back in 2017 (oh god, it’s almost 10 years, wtf?!). This series gave that seed the water to grow. It’s one of the best and most thought-provoking series about a world after whole brain emulation, and it tries just as hard to imagine a world after superintelligence, policy and governance included.</p>
+      <details class="critique">
+        <summary>My critique of the ending (spoilers)</summary>
+        <p>What we saw in the show can’t represent the root universe, the real world.</p>
+        <figure class="loop">
+          <svg viewBox="0 0 640 512" role="img" aria-labelledby="loop-title">
+            <title id="loop-title">The root universe on top, outside a loop of universes N, N+1 and N+2, each simulating the next and N+2 looping back to N. In each universe of the loop the dying Caspian’s hint leads to his revival and to the SafeSurf lords. The root has nothing above it, so no hint, no revival and no SafeSurf: it can’t be any universe in the loop.</title>
+            <defs><marker id="loop-head" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="#B0602A"/></marker></defs>
+            <g class="s" data-step="3"><circle class="pulse gone" r="5"><animateMotion begin="indefinite" dur="5s" fill="freeze" path="M320 270 L320 430 L457 430 C 600 430, 600 225, 532 225 L320 225 Z"/></circle></g>
+            <g class="s" data-step="1">
+              <rect class="u u1" x="110" y="180" width="420" height="90" rx="3"/>
+              <text class="lab" x="126" y="207">universe N</text>
+              <circle class="who" cx="132" cy="231" r="6"/>
+              <text class="quote" x="145" y="237">“we’ll meet again”</text>
+              <text class="tiny" x="145" y="258">the dying Caspian’s hint</text>
+            </g>
+            <g class="s" data-step="2">
+              <text class="story" x="312" y="237">→ revived → SafeSurf</text>
+            </g>
+            <g class="s" data-step="3">
+              <rect class="bound" x="92" y="168" width="518" height="310" rx="4"/>
+              <path class="hint" d="M320 270 V 302" marker-end="url(#loop-head)"/>
+              <text class="tiny" x="332" y="292">simulates, and passes the hint down</text>
+              <rect class="u u2" x="150" y="306" width="340" height="60" rx="3"/>
+              <text class="lab" x="166" y="331">universe N+1</text>
+              <text class="tiny" x="166" y="354">same hint → revived → SafeSurf</text>
+              <path class="hint" d="M320 366 V 396" marker-end="url(#loop-head)"/>
+              <rect class="u u3" x="185" y="400" width="270" height="60" rx="3"/>
+              <text class="lab" x="200" y="425">universe N+2, which is N−1</text>
+              <text class="tiny" x="200" y="448">the same story again</text>
+              <path class="hint draw" style="--dd:.4s" d="M457 430 C 600 430, 600 225, 532 225" marker-end="url(#loop-head)"/>
+              <text class="tiny end" x="562" y="334">it loops</text>
+              <text class="mark" x="100" y="500">the loop: what we saw</text>
+            </g>
+            <g class="s" data-step="4">
+              <rect class="u root" x="30" y="64" width="580" height="76" rx="3"/>
+              <text class="lab" x="48" y="94">root universe</text>
+              <path class="hint" d="M320 140 V 176" marker-end="url(#loop-head)"/>
+              <text class="tiny" x="332" y="163">runs it</text>
+            </g>
+            <g class="s" data-step="5">
+              <rect class="ghost" x="210" y="6" width="220" height="38" rx="3"/>
+              <text class="tiny mid" x="320" y="30">nothing above the root</text>
+              <path class="hint dashed" d="M320 46 V 62"/>
+              <text class="q" x="334" y="62">?</text>
+              <text class="mark" x="48" y="124">no hint, so no revival, so no SafeSurf</text>
+              <text class="mark end" x="594" y="94">the real world</text>
+            </g>
+          </svg>
+          <ol class="loop-steps">
+            <li>In the show, the dying Caspian tells Maddie when they’ll meet again.</li>
+            <li>Because of that hint, Maddie revives him with David’s help, and the revived Caspian is how the SafeSurf lords come to exist.</li>
+            <li>The SafeSurf lords simulate the next universe, where Caspian gets the same hint from them. N+1 plays out the same way, then N+2, which is really N−1: the story loops.</li>
+            <li>A loop of simulations still needs a start. Every simulation has less compute than its host, like a virtual machine inside a virtual machine, so the nesting can’t go back forever. There has to be a root universe, and someone in it runs the loop, like a dramatic movie made of real simulations.</li>
+            <li>Nothing is above the root, so no one gives its dying Caspian the hint. Maddie never revives him, and there are no SafeSurf lords. The root can’t be any universe in the loop, so what we saw can’t represent the real world.</li>
+          </ol>
+          <figcaption class="loop-ui" hidden>
+            <p class="loop-cap" aria-live="polite"></p>
+            <span class="loop-ctl"><button type="button" data-act="back">Back</button> <span class="loop-n"></span> <button type="button" data-act="next">Next</button></span>
+          </figcaption>
+        </figure>
+        <p>Talk me out of it.</p>
+      </details>
+      <details>
+        <summary>My critique of Holstrom (spoilers)</summary>
+        <p>I hate how Holstrom could have just been calmer and won in the end. All he had to do was be good: people would upload themselves, and he could let be those who didn’t want to. I don’t know why he had to get the whole of humanity to upload.</p>
+        <p>Stephen, who was supposed to be the most intellectual, couldn’t see the obvious repercussions of acting as humanity’s authority figure. Forcing people to upload was his really stupid end. To be fair, even Maddie, in the end, lost Caspian and her son by acting irrationally and emotionally.</p>
+      </details>
+    </li>
+  </ul>
+
+  <p class="write"><a href="mailto:padia.so@northeastern.edu">Email me</a>, or <a href="/#write">write anonymously</a>.</p>
+</main>
+<script>
+// The critique's diagram: when the spoiler opens, its five steps play once, a few
+// seconds apart; Back and Next step by hand. With reduced motion nothing plays by itself.
+(function(){
+  var details = document.querySelector('.critique'), fig = details && details.querySelector('.loop');
+  if (!fig) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var steps = [].map.call(fig.querySelectorAll('.loop-steps li'), function(li){ return li.textContent; });
+  var groups = fig.querySelectorAll('.s'), ui = fig.querySelector('.loop-ui');
+  var cap = fig.querySelector('.loop-cap'), count = fig.querySelector('.loop-n');
+  var back = fig.querySelector('[data-act="back"]'), next = fig.querySelector('[data-act="next"]');
+  var step = 0, timer = null, pending = null;
+  var pulse = fig.querySelector('.pulse'), lap = pulse && pulse.querySelector('animateMotion');
+  if (lap) {
+    lap.addEventListener('beginEvent', function(){ pulse.classList.remove('gone'); });
+    lap.addEventListener('endEvent', function(){ pulse.classList.add('gone'); });
+  }
+  function goRound(){ if (lap && !reduce && lap.beginElement) lap.beginElement(); }
+  fig.querySelectorAll('.draw').forEach(function(p){ p.style.setProperty('--len', Math.ceil(p.getTotalLength())); });
+  fig.classList.add('anim'); ui.hidden = false;
+  function show(n){
+    var was = step;
+    step = Math.max(1, Math.min(steps.length, n));
+    if (step >= 3 && was < 3) setTimeout(goRound, reduce ? 0 : 900);   // once the loop's arrows are in
+    if (step < 3 && pulse) pulse.classList.add('gone');
+    groups.forEach(function(g){ g.classList.toggle('on', +g.dataset.step <= step); });
+    cap.textContent = steps[step - 1];
+    count.textContent = step + ' / ' + steps.length;
+    back.disabled = step === 1;
+    next.textContent = step === steps.length ? 'Replay' : 'Next';
+  }
+  function stop(){ clearInterval(timer); timer = null; clearTimeout(pending); pending = null; }
+  function play(){
+    stop();
+    if (reduce) return;
+    timer = setInterval(function(){ if (step >= steps.length) stop(); else show(step + 1); }, 4500);
+  }
+  function restart(){
+    stop();
+    groups.forEach(function(g){ g.classList.remove('on'); });
+    pending = setTimeout(function(){ pending = null; show(1); play(); }, reduce ? 0 : 450);
+  }
+  details.addEventListener('toggle', function(){ if (details.open) restart(); else stop(); });
+  next.addEventListener('click', function(){ if (step === steps.length) restart(); else { stop(); show(step + 1); } });
+  back.addEventListener('click', function(){ stop(); show(step - 1); });
+  show(1);
+})();
+</script>
+<script>
+// The topics' popups. Dexter's "Be funny" splatters blood over the page and turns
+// into "Clean up"; Pantheon's "Upload me" makes the page shudder for a moment.
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var touch = window.matchMedia('(hover: none)').matches;
+  var topics = document.querySelectorAll('.topic');
+  if (touch && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('seen'); }); }, { threshold: .6 });
+    topics.forEach(function(t){ io.observe(t); });
+  }
+
+  /* ---- Dexter: blood spatter ---- */
+  var cv = document.getElementById('splat'), ctx = cv.getContext('2d'), drips = [], raf = 0, dirty = false;
+  var rnd = function(a, b){ return a + Math.random() * (b - a); };
+  var red = function(){ return 'rgba(' + Math.round(rnd(105, 140)) + ',' + Math.round(rnd(4, 14)) + ',' + Math.round(rnd(8, 16)) + ',' + rnd(.85, .95).toFixed(2) + ')'; };
+  function sizeCanvas(){
+    var d = document.documentElement, w = d.scrollWidth, h = Math.max(d.scrollHeight, innerHeight), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      var keep = dirty && cv.width ? cv : null, old;
+      if (keep) { old = document.createElement('canvas'); old.width = cv.width; old.height = cv.height; old.getContext('2d').drawImage(cv, 0, 0); }
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + 'px'; cv.style.height = h + 'px';
+      ctx.setTransform(1, 0, 0, 1, 0, 0); if (old) ctx.drawImage(old, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+  function blob(x, y, r){                       // the body of a drop: a wobbly disc
+    var n = 36, ph = [rnd(0, 6), rnd(0, 6), rnd(0, 6)];
+    ctx.beginPath();
+    for (var i = 0; i <= n; i++) {
+      var t = i / n * Math.PI * 2, k = 1 + .12 * Math.sin(3 * t + ph[0]) + .08 * Math.sin(5 * t + ph[1]) + .05 * Math.sin(9 * t + ph[2]);
+      var px = x + r * k * Math.cos(t), py = y + r * k * Math.sin(t);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.fill();
+  }
+  function splat(x, y, R){                      // one impact: a blob, spines, flung droplets, maybe a drip
+    var dir = rnd(0, Math.PI * 2);
+    ctx.fillStyle = red(); blob(x, y, R);
+    for (var i = 0, n = Math.round(rnd(7, 13)); i < n; i++) {        // spines
+      var a = dir + rnd(-1.6, 1.6), len = R * rnd(1.2, 2.3), w = R * rnd(.12, .26);
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a + 1.57) * w, y + Math.sin(a + 1.57) * w);
+      ctx.quadraticCurveTo(x + Math.cos(a) * len * .7, y + Math.sin(a) * len * .7, x + Math.cos(a) * len, y + Math.sin(a) * len);
+      ctx.quadraticCurveTo(x + Math.cos(a) * len * .7, y + Math.sin(a) * len * .7, x + Math.cos(a - 1.57) * w, y + Math.sin(a - 1.57) * w);
+      ctx.fill();
+      blob(x + Math.cos(a) * len, y + Math.sin(a) * len, w * rnd(.7, 1.3));
+    }
+    for (var j = 0, m = Math.round(rnd(14, 30)); j < m; j++) {       // flung droplets, thinning out with distance
+      var b = dir + rnd(-1.1, 1.1), dist = R * rnd(1.6, 4.2), rr = Math.max(1, R * .16 * (1.6 - dist / (R * 4.2)) * rnd(.4, 1.2));
+      var dx = x + Math.cos(b) * dist, dy = y + Math.sin(b) * dist;
+      ctx.save(); ctx.translate(dx, dy); ctx.rotate(b); ctx.beginPath(); ctx.ellipse(0, 0, rr * rnd(1.2, 2.2), rr, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
+    if (Math.random() < .6) drips.push({ x: x + rnd(-R * .4, R * .4), y: y + R * .6, w: rnd(3, 6), len: 0, to: rnd(40, 150), c: ctx.fillStyle });
+  }
+  function drawDrips(now){
+    var live = false;
+    drips.forEach(function(d){
+      if (d.len >= d.to) return;
+      var step = reduce ? d.to : Math.min(d.to - d.len, .6 + (d.to - d.len) * .03);
+      ctx.fillStyle = d.c;
+      ctx.fillRect(d.x - d.w / 2, d.y + d.len, d.w, step + 1);
+      d.len += step;
+      ctx.beginPath(); ctx.arc(d.x, d.y + d.len, d.w * .75, 0, Math.PI * 2); ctx.fill();   // the bead at the end
+      if (d.len < d.to) live = true;
+    });
+    raf = live ? requestAnimationFrame(drawDrips) : 0;
+  }
+  function spatter(btn){
+    cv.hidden = false; cv.style.opacity = 1; sizeCanvas(); dirty = true;
+    var k = Math.min(1, Math.max(.55, innerWidth / 900));    // smaller splats on small screens
+    var b = btn.getBoundingClientRect(), top = scrollY, hits = [[b.left - 150 * k, b.top + top + 70 * k, 34 * k]];
+    for (var i = 0; i < 4; i++) hits.push([rnd(.08, .92) * innerWidth, top + rnd(.12, .9) * innerHeight, rnd(14, 46) * k]);
+    hits.forEach(function(h, i){ setTimeout(function(){ splat(h[0], h[1], h[2]); if (!raf) raf = requestAnimationFrame(drawDrips); }, reduce ? 0 : i * 110); });
+  }
+  function cleanUp(){
+    cv.style.opacity = 0;
+    setTimeout(function(){ ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); ctx.restore(); drips = []; dirty = false; cv.hidden = true; }, reduce ? 0 : 900);
+  }
+
+  /* ---- Pantheon: the upload shudder ---- */
+  var noise = document.getElementById('ui-noise'), shift = document.getElementById('ui-shift'), main = document.querySelector('main'), busy = false;
+  function upload(){
+    if (busy) return; busy = true;
+    var root = document.documentElement, t0 = performance.now(), D = reduce ? 700 : 1400;
+    root.classList.add('uploading');
+    (function frame(now){
+      var t = (now - t0) / D;
+      if (t >= 1) { root.classList.remove('uploading'); shift.setAttribute('scale', 0); main.style.transform = ''; busy = false; return; }
+      if (!reduce) {
+        var env = Math.sin(Math.PI * t), burst = Math.random() < .25 ? 1.6 : 1;   // swells, with a few sharper kicks
+        shift.setAttribute('scale', (16 * env * burst).toFixed(1));
+        noise.setAttribute('seed', Math.floor(now / 70) % 50);                   // the bands move about 14 times a second
+        main.style.transform = 'translateX(' + (rnd(-2.5, 2.5) * env).toFixed(1) + 'px)';
+      }
+      requestAnimationFrame(frame);
+    })(t0);
+  }
+
+  document.querySelectorAll('.fun').forEach(function(btn){
+    var kind = btn.closest('.topic').dataset.fun;
+    btn.addEventListener('click', function(){
+      if (kind === 'upload') return upload();
+      if (btn.dataset.state === 'mess') { cleanUp(); btn.textContent = 'Be funny'; btn.dataset.state = ''; }
+      else { spatter(btn); btn.textContent = 'Clean up'; btn.dataset.state = 'mess'; }
+    });
+  });
+  window.addEventListener('resize', function(){ if (dirty) sizeCanvas(); });
+})();
+</script>
+</body>
+</html>

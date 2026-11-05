@@ -299,8 +299,10 @@ html.simple .loader{ transition-duration:.25s; }
     <a href="mailto:padia.so@northeastern.edu">Email</a>
     <a href="https://github.com/soham-padia">GitHub</a>
     <a href="https://linkedin.com/in/soham-padia">LinkedIn</a>
+    <a href="/talk/">Talk to me about…</a>
   </span>
 </header>
+
 
 <main class="panel" id="panel">
   <section class="ch" data-i="0" aria-label="Introduction">
@@ -618,6 +620,11 @@ html.simple .loader{ transition-duration:.25s; }
   dlg.addEventListener('close', () => { document.documentElement.style.overflow = ''; document.getElementById('openNote').focus(); });
   dlg.addEventListener('click', e => { if (e.target === dlg) closeNote(); });
   document.getElementById('openNote').addEventListener('click', openNote);
+
+  // /#write opens the note form (the talk page links here)
+  const writeFromHash = () => { if (location.hash === '#write') { history.replaceState(null, '', location.pathname); openNote(); } };
+  window.addEventListener('hashchange', writeFromHash);
+  writeFromHash();
   document.getElementById('noteCancel').addEventListener('click', closeNote);
   document.getElementById('noteClose').addEventListener('click', closeNote);
   bodyEl.addEventListener('input', () => { countEl.textContent = bodyEl.value.length + ' / 4000'; });
