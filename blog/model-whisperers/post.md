@@ -1,4 +1,4 @@
-# Model whisperers
+# Model whisperers: optimized token prefixes can imitate function vectors, filter heads, and steering directions
 
 +++ **TLDR : Prefixes are weird. (Spoiler! Read after guessing)**
 
@@ -278,6 +278,23 @@ And thanks to Natalie Shapira for letting me use the AICR compute, much more imp
 Steering Arena itself ran through NDIF, and none of this would have been nearly as easy to poke at if Ai2 had not released OLMo openly.
 
 Also thanks to everyone who played Steering Arena. A surprising amount of this project exists because people kept trying increasingly stupid strings against a leaderboard.
+
+## References
+
+*   [Team Olmo (2025), Olmo 3](https://arxiv.org/abs/2512.13961)
+*   [Fiotto-Kaufman et al. (2024), NNsight and NDIF: Democratizing Access to Open-Weight Foundation Model Internals](https://proceedings.iclr.cc/paper_files/paper/2025/hash/e6c65eb9b56719c1aa45ff73874de317-Abstract-Conference.html)
+*   [Zou et al. (2023), Universal and Transferable Adversarial Attacks on Aligned Language Models](https://arxiv.org/abs/2307.15043)
+*   [Panickssery et al. (2023), Steering Llama 2 via Contrastive Activation Addition](https://arxiv.org/abs/2312.06681)
+*   [Saini et al. (2026), Bridging Mechanistic Interpretability and Prompt Engineering with Gradient Ascent for Interpretable Persona Control](https://arxiv.org/abs/2601.02896)
+*   [Todd et al. (2024), Function Vectors in Large Language Models](https://proceedings.iclr.cc/paper_files/paper/2024/hash/4ae163cb8788970e53b4fd9578141139-Abstract-Conference.html)
+*   [Gandikota et al. (2026), Gaze Heads: How VLMs Look at What They Describe](https://arxiv.org/abs/2606.14703)
+*   [Winninger et al. (2025), Using Mechanistic Interpretability to Craft Adversarial Attacks against Large Language Models](https://arxiv.org/abs/2503.06269)
+*   [Sen Sharma et al. (2025), LLMs Process Lists With General Filter Heads](https://proceedings.iclr.cc/paper_files/paper/2026/hash/6732332e3c4155da82cb9d4970e88133-Abstract-Conference.html)
+*   [Batorski et al. (2026), Spurious Prompts: Can Irrelevant Prompts Steer Large Language Models?](https://arxiv.org/abs/2605.29678)
+*   [Melamed et al. (2023), Prompts have evil twins](https://aclanthology.org/2024.emnlp-main.4/)
+*   [Wen et al. (2023), Hard Prompts Made Easy: Gradient-Based Discrete Optimization for Prompt Tuning and Discovery](https://proceedings.neurips.cc/paper_files/paper/2023/hash/a00548031e4647b13042c97c922fadf1-Abstract-Conference.html)
+*   [Gurnee et al. (2026), Verbalizable Representations Form a Global Workspace in Language Models](https://arxiv.org/abs/2607.15495)
+*   [Krojer et al. (2026), LatentLens: Revealing Highly Interpretable Visual Tokens in LLMs](https://arxiv.org/abs/2602.00462)
 
 [^keod5j0m1b9]: Pro human prefix for Olmo 
 

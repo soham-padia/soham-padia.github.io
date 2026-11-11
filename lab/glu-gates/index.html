@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>GLU Gate Lab — Soham Padia</title>
-<meta name="description" content="An interactive lab for the 22 feed-forward gates of my stairs study: each gate's shape and slope, a live layer of hidden units, and how each one did in training.">
+<meta name="description" content="An interactive lab for the 34 feed-forward gates of my stairs study: each gate's shape and slope, a live layer of hidden units, and how each one did in training.">
 <meta name="author" content="Soham Padia">
 <meta name="theme-color" content="#F3F0E8">
 <link rel="icon" type="image/png" sizes="32x32" href="/img/icon/icon-32.png">
@@ -15,14 +15,14 @@
 <meta property="og:site_name" content="Soham Padia">
 <meta property="og:url" content="https://soham-padia.github.io/lab/glu-gates/">
 <meta property="og:title" content="GLU Gate Lab">
-<meta property="og:description" content="22 feed-forward gates, their shapes and slopes, a live layer of hidden units, and how each did in training.">
+<meta property="og:description" content="34 feed-forward gates, their shapes and slopes, a live layer of hidden units, and how each did in training.">
 <meta property="og:image" content="https://soham-padia.github.io/img/share/plate-1.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Plate I. A neuron, or a pressed specimen. Printed in cyanotype.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="GLU Gate Lab">
-<meta name="twitter:description" content="22 feed-forward gates, their shapes and slopes, a live layer of hidden units, and how each did in training.">
+<meta name="twitter:description" content="34 feed-forward gates, their shapes and slopes, a live layer of hidden units, and how each did in training.">
 <meta name="twitter:image" content="https://soham-padia.github.io/img/share/plate-1.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -160,7 +160,7 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
   <a class="name" href="/">Soham Padia</a>
   <span class="site-links">
     <a href="/blog">Notes</a>
-    <a href="/lab/glu-gates/" aria-current="page">Lab</a>
+    <a href="/lab/" aria-current="page">Lab</a>
     <a href="mailto:padia.so@northeastern.edu">Email</a>
     <a href="https://github.com/soham-padia">GitHub</a>
     <a href="https://linkedin.com/in/soham-padia">LinkedIn</a>
@@ -171,7 +171,7 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
   <header>
     <p class="eyebrow">Lab · from the stairs study</p>
     <h1>GLU Gate Lab</h1>
-    <p class="lede">A transformer's feed-forward layer has a gate: a small function that decides how much of each hidden unit gets through. Most models today use SwiGLU. I trained a small model (10 layers, d_model 512) with 21 other gates: staircases meant to make the layer cheaper to quantize or skip, and a few that borrow the rules of Conway's Game of Life. Five seeds each, 172 runs in all. On loss nothing beat SwiGLU, and putting the exact Game of Life rule on top of it tied.</p>
+    <p class="lede">A transformer's feed-forward layer has a gate: a small function that decides how much of each hidden unit gets through. Most models today use SwiGLU. I trained a small model (10 layers, d_model 512) with 33 other gates: staircases meant to make the layer cheaper to quantize or skip, gates that borrow the rules of Conway's Game of Life, sparse gates that keep SiLU's gradient, and energy budgets on the layer's output. Five seeds each, 275 runs in all. On loss nothing beat SwiGLU; the best sparse gate came within about 0.01 of it with 77% of its outputs exactly zero.</p>
     <p class="lede">Every gate in the study sits in the same spot of the feed-forward block. The layer computes two projections of the token, bends one of them with a gate, multiplies, and projects back. Pick a gate to see its shape, the slope training sees, and what it does to a live layer of hidden units.</p>
     <div class="flow" role="img" aria-label="Feed-forward block: x goes through W1 to a and through W2 to b; a passes the gate to give g, b passes the value branch to give u; h equals g times u, and W3 maps h back to the model width.">
       <svg viewBox="0 0 760 150" id="flow">
@@ -257,11 +257,21 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
           <div class="ctl"><label for="c-n">Neighbour count n for the curves <output id="o-n"></output></label><input type="range" id="c-n" min="0" max="8" step="0.05" value="4"><small id="n-help">n sums σ(a) over the 8 nearest units. With random activations it sits near 4.</small></div>
         </div>
         <div class="ctlgroup" id="w-life2"><h3>Life rule (per unit)</h3>
-          <div class="ctl"><label for="c-tg">Modulation strength tanh(γ) <output id="o-tg"></output></label><input type="range" id="c-tg" min="-1" max="1" step="0.01" value="0"><small>0 is plain SwiGLU. Units where the rule is off get m = 1 − tanh(γ); units where it is on keep m = 1.</small></div>
+          <div class="ctl" id="w-tg"><label for="c-tg">Modulation strength tanh(γ) <output id="o-tg"></output></label><input type="range" id="c-tg" min="-1" max="1" step="0.01" value="0"><small>0 is plain SwiGLU. Units where the rule is off get m = 1 − tanh(γ); units where it is on keep m = 1.</small></div>
           <div class="ctl"><label for="c-theta">Aliveness threshold θ <output id="o-theta"></output></label><input type="range" id="c-theta" min="-2" max="2" step="0.01" value="0"><small>A unit is alive when a &gt; θ.</small></div>
           <div class="ctl" id="w-lo"><label for="c-lo">Window lower edge <output id="o-lo"></output></label><input type="range" id="c-lo" min="2" max="8" step="0.01" value="4"></div>
           <div class="ctl" id="w-hi"><label for="c-hi">Window upper edge <output id="o-hi"></output></label><input type="range" id="c-hi" min="3" max="10" step="0.01" value="7"><small>The rule is on for z between lower + 1 and upper. Conway's edges are 4 and 7.</small></div>
-          <div class="presets"><button type="button" class="btn" data-preset="init">Start of training</button><button type="button" class="btn" data-preset="trained">After training (mean)</button></div>
+          <div class="presets" id="life2-presets"><button type="button" class="btn" data-preset="init">Start of training</button><button type="button" class="btn" data-preset="trained">After training (mean)</button></div>
+        </div>
+        <div class="ctlgroup" id="w-sparse"><h3>Pruning (conway_sparse)</h3>
+          <div class="ctl"><label for="c-kappa">Strength bar κ <output id="o-kappa"></output></label><input type="range" id="c-kappa" min="0" max="2" step="0.01" value="1"><small>A unit is strong when its clipped gate exceeds κ × the token's RMS. κ ramps from 0 to 1 early in training.</small></div>
+          <div class="ctl"><label for="c-rho">Token RMS of the clipped gates (curves only) <output id="o-rho"></output></label><input type="range" id="c-rho" min="0.05" max="2" step="0.01" value="0.5"><small>The live layer below computes it from its own 64 units.</small></div>
+        </div>
+        <div class="ctlgroup" id="w-eco"><h3>The step on h (per token)</h3>
+          <div class="ctl" id="w-K"><label for="c-K">Energy budget K <output id="o-K"></output></label><input type="range" id="c-K" min="0.05" max="3" step="0.01" value="1"><small>Starts at 1. The smaller K is, the harder the budget binds.</small></div>
+          <div class="ctl" id="w-s"><label for="c-s">Crowding weight s <output id="o-s"></output></label><input type="range" id="c-s" min="-2" max="2" step="0.01" value="0"><small>Starts at 0. The learned low-rank part of the gain also starts at 0 and isn't shown here.</small></div>
+          <div class="ctl"><label for="c-E">Token energy E = mean(h²) (curves only) <output id="o-E"></output></label><input type="range" id="c-E" min="0.01" max="3" step="0.01" value="0.3"><small>The live layer below computes it from its own 64 units.</small></div>
+          <div class="presets" id="eco-presets"><button type="button" class="btn" data-preset="init">Start of training</button><button type="button" class="btn" data-preset="trained">After training (mean)</button></div>
         </div>
       </div>
     </div>
@@ -300,27 +310,32 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
       </figure>
     </div>
     <div id="life-off">
-      <p class="note">This gate is pointwise: each unit sees only its own <code>a</code>. The life gates are different. They arrange the units on a ring (or, for conway2d_swiglu, a 2-D grid) and let each unit's gate depend on its 8 nearest neighbours, the way a cell in Conway's Game of Life looks at the 8 cells around it. Round 2 made the rule smooth; round 3 kept it exact and used it to scale SwiGLU.</p>
-      <div class="jump" style="margin-top:10px"><button type="button" class="btn" data-go="conway_swiglu">See conway_swiglu</button><button type="button" class="btn" data-go="conway2d_swiglu">See conway2d_swiglu</button><button type="button" class="btn" data-go="life_glu">See life_glu</button><button type="button" class="btn" data-go="lenia_glu">See lenia_glu</button></div>
+      <p class="note">This gate is pointwise: each unit sees only its own <code>a</code>. The life gates are different. They arrange the units on a ring (or, for conway2d_swiglu, a 2-D grid) and let each unit's gate depend on its 8 nearest neighbours, the way a cell in Conway's Game of Life looks at the 8 cells around it. Round 2 made the rule smooth; round 3 kept it exact and used it to scale SwiGLU; round 6 made it a layer's only nonlinearity, or used it only to scale gradients.</p>
+      <div class="jump" style="margin-top:10px"><button type="button" class="btn" data-go="conway_swiglu">See conway_swiglu</button><button type="button" class="btn" data-go="conway2d_swiglu">See conway2d_swiglu</button><button type="button" class="btn" data-go="life_glu">See life_glu</button><button type="button" class="btn" data-go="lenia_glu">See lenia_glu</button><button type="button" class="btn" data-go="conway_sparse">See conway_sparse</button><button type="button" class="btn" data-go="conway_ffn">See conway_ffn</button></div>
     </div>
   </section>
 
   <footer>
-    <p>Every gate here is a line-for-line port of the study's training code, checked against PyTorch's own outputs for all 22 gates on 1,320 layers of 64 units at three settings (largest relative gap 1.4e-6). The study numbers come from the 172 runs of rounds 1–3.</p>
+    <p>Every gate here is a line-for-line port of the study's training code, checked against PyTorch's own outputs for all 34 gates on 2,040 layers of 64 units at three settings, including h after the rounds 5–6 steps and bilinear_lifelearn's gradient factor (largest relative gap 1.4e-6). The study numbers come from the 275 runs of rounds 1–6.</p>
     <p>Notation: σ is the logistic sigmoid, <code>r(x) = Δ/2π · sin(2πx/Δ)</code>, <code>bell(x; c, w) = exp(−((x − c)/w)²)</code>.</p>
   </footer>
 </div>
 <div id="tip" role="tooltip" hidden></div>
 
-<script id="study" type="application/json">{"gates":{"swiglu":{"group":"baseline","desc":"silu(a) * b, the standard","lr":0.004,"n":5,"val":3.5512,"d":[0.0,0.0],"zeros":0.0,"near0":0.1187,"int4":0.771,"snap":0.206,"minutes":7.4},"bilinear":{"group":"baseline","desc":"a * b, no nonlinearity; the key control for every sine gate","lr":0.004,"n":5,"val":3.5769,"d":[0.0257,0.007],"zeros":0.0,"near0":0.1122,"int4":0.096,"snap":0.027,"minutes":7.4},"clipped_swiglu":{"group":"baseline","desc":"max(silu(a), 0) * b; same clipping as the stairs, no stairs","lr":0.001,"n":5,"val":3.5749,"d":[0.0237,0.0082],"zeros":0.7904,"near0":0.8117,"int4":0.072,"snap":0.017,"minutes":7.4},"relu2_glu":{"group":"baseline","desc":"relu(a)^2 * b; sparse gate in the BitNet a4.8 style","lr":0.001,"n":5,"val":3.5796,"d":[0.0284,0.0109],"zeros":0.6342,"near0":0.7371,"int4":0.093,"snap":0.008,"minutes":7.3},"drelu":{"group":"baseline","desc":"relu(a) * relu(b); TurboSparse's dReLU, the sparsity bar","lr":0.001,"n":5,"val":3.5733,"d":[0.0221,0.0158],"zeros":0.9017,"near0":0.7655,"int4":0.074,"snap":0.01,"minutes":7.3},"quant_mid":{"group":"yours","desc":"hard midpoint stairs on silu(a), STE (the original design)","lr":0.002,"n":5,"val":3.5737,"d":[0.0226,0.0069],"zeros":0.75,"near0":0.75,"int4":0.088,"snap":0.0,"minutes":7.4},"quant_round":{"group":"yours","desc":"zero-preserving stairs on silu(a): round to the step grid, STE","lr":0.002,"n":5,"val":3.5824,"d":[0.0313,0.0137],"zeros":0.829,"near0":0.829,"int4":0.07,"snap":0.0,"minutes":7.4},"sine_glu":{"group":"yours","desc":"a + sin(2 pi a)/(2 pi): two-sided smooth staircase, alpha = 1","lr":0.004,"n":5,"val":3.5989,"d":[0.0477,0.0135],"zeros":0.0,"near0":0.0438,"int4":0.126,"snap":0.013,"minutes":7.6},"sine_glu_a05":{"group":"yours","desc":"a + 0.5 sin(2 pi a)/(2 pi): partial ripple, alpha = 0.5","lr":0.004,"n":5,"val":3.5847,"d":[0.0335,0.0125],"zeros":0.0,"near0":0.0679,"int4":0.11,"snap":0.02,"minutes":7.6},"leaky_sine":{"group":"yours","desc":"stairs for a > 0, wiggles around 0.1 a for a <= 0 (s = 0.1, beta = 1)","lr":0.002,"n":5,"val":3.6268,"d":[0.0757,0.0101],"zeros":0.0,"near0":0.1566,"int4":0.099,"snap":0.017,"minutes":7.6},"leaky_sine_mini":{"group":"yours","desc":"stairs for a > 0, mini-stairs on 0.1 a for a <= 0 (s = beta = 0.1)","lr":0.004,"n":5,"val":3.5838,"d":[0.0326,0.0083],"zeros":0.0,"near0":0.1645,"int4":0.248,"snap":0.12,"minutes":7.6},"anneal_sine_glu":{"group":"long shot","desc":"ripple amplitude ramps 0 -> 1 over 80% of training","lr":0.004,"n":5,"val":3.5915,"d":[0.0404,0.0097],"zeros":0.0,"near0":0.0509,"int4":0.117,"snap":0.015,"minutes":7.6},"deadzone_sine_glu":{"group":"long shot","desc":"a - sin(2 pi a)/(2 pi): integer plateaus incl. a flat soft-off at 0","lr":0.004,"n":5,"val":3.6024,"d":[0.0512,0.0107],"zeros":0.0381,"near0":0.3509,"int4":0.083,"snap":0.014,"minutes":7.6},"learned_ripple_glu":{"group":"long shot","desc":"a + amp_c sin(w_c a + phase_c)/w_c, learnable per channel","lr":0.004,"n":5,"val":3.5793,"d":[0.0282,0.0086],"zeros":0.0,"near0":0.1157,"int4":0.115,"snap":0.025,"minutes":8.3,"trained":{"amp":0.263,"freq":1.207}},"pwl_stair_glu":{"group":"long shot","desc":"piecewise-linear stairs (no sin), blended 75% with a","lr":0.004,"n":5,"val":3.6005,"d":[0.0494,0.0099],"zeros":0.0,"near0":0.0509,"int4":0.117,"snap":0.012,"minutes":7.4},"sine_up":{"group":"long shot","desc":"silu(a) * (b + sin(2 pi b)/(2 pi)): ripple on the value branch","lr":0.002,"n":5,"val":3.5736,"d":[0.0225,0.0072],"zeros":0.0,"near0":0.0801,"int4":0.275,"snap":0.119,"minutes":7.7},"window_glu":{"group":"life","desc":"a * bell(8 sigmoid(a)): the unit's own activity through a learned window","lr":0.002,"n":5,"val":3.5872,"d":[0.0361,0.0111],"zeros":0.0,"near0":0.0677,"int4":0.06,"snap":0.132,"minutes":7.9,"trained":{"centre":3.999,"width":2.282}},"life_glu":{"group":"life","desc":"soft Conway B3/S23 from 8 ring neighbours' sigmoid(a), fixed windows","lr":0.004,"n":5,"val":3.5998,"d":[0.0487,0.0107],"zeros":0.0,"near0":0.8532,"int4":0.046,"snap":0.075,"minutes":9.6},"lenia_glu":{"group":"life","desc":"a * bell(neighbour count): bilinear signal, learned window on 8 neighbours","lr":0.004,"n":5,"val":3.5762,"d":[0.0251,0.0064],"zeros":0.0,"near0":0.1886,"int4":0.111,"snap":0.035,"minutes":10.5,"trained":{"centre":3.995,"width":1.355}},"conway_swiglu":{"group":"life2","desc":"silu(a) modulated by exact Conway B3/S23 on binarized units, 1-D ring","lr":0.004,"n":5,"val":3.5534,"d":[0.0022,0.0045],"zeros":0.0,"near0":0.1815,"int4":2.002,"snap":1.379,"minutes":11.0,"trained":{"tg":0.216,"theta":0.297,"lo":4.0,"hi":7.0}},"lenia_swiglu":{"group":"life2","desc":"silu(a) modulated by a Life rule with learned window edges, 1-D ring","lr":0.004,"n":5,"val":3.5535,"d":[0.0024,0.0047],"zeros":0.0,"near0":0.1915,"int4":3.174,"snap":2.795,"minutes":11.6,"trained":{"tg":0.243,"theta":0.233,"lo":4.236,"hi":6.83}},"conway2d_swiglu":{"group":"life2","desc":"conway_swiglu on a 2-D torus grid with Conway's Moore neighbourhood","lr":0.004,"n":5,"val":3.5544,"d":[0.0032,0.0029],"zeros":0.0,"near0":0.1939,"int4":1.356,"snap":1.002,"minutes":10.5,"trained":{"tg":0.221,"theta":0.29,"lo":4.0,"hi":7.0}}},"checks":[{"id":"Q1","q":"Does the sine ripple beat a plain bilinear gate?","a":"sine_glu","b":"bilinear","d":[0.022,0.0089],"n":5},{"id":"Q1b","q":"Does a half-strength ripple beat bilinear?","a":"sine_glu_a05","b":"bilinear","d":[0.0078,0.0069],"n":5},{"id":"Q2","q":"Do zero-preserving stairs cost loss beyond clipping?","a":"quant_round","b":"clipped_swiglu","d":[0.0076,0.0073],"n":5},{"id":"Q2b","q":"Midpoint stairs vs zero-preserving stairs","a":"quant_mid","b":"quant_round","d":[-0.0087,0.0083],"n":5},{"id":"Q3","q":"Does the slanted, wiggly negative side help?","a":"leaky_sine","b":"sine_glu","d":[0.0279,0.0095],"n":5},{"id":"Q3b","q":"Do negative mini-stairs help?","a":"leaky_sine_mini","b":"sine_glu","d":[-0.0151,0.0096],"n":5},{"id":"LS","q":"Annealed ripple vs fixed ripple","a":"anneal_sine_glu","b":"sine_glu","d":[-0.0074,0.0088],"n":5},{"id":"LS","q":"Zero-plateau phase vs midpoint phase","a":"deadzone_sine_glu","b":"sine_glu","d":[0.0035,0.0102],"n":5},{"id":"LS","q":"Learned per-channel ripple vs bilinear","a":"learned_ripple_glu","b":"bilinear","d":[0.0024,0.0041],"n":5},{"id":"LS","q":"Piecewise-linear stairs vs sine stairs","a":"pwl_stair_glu","b":"sine_glu","d":[0.0016,0.0118],"n":5},{"id":"LS","q":"Ripple on the value branch vs SwiGLU","a":"sine_up","b":"swiglu","d":[0.0225,0.0072],"n":5},{"id":"L1","q":"Does a pointwise window gate beat bilinear?","a":"window_glu","b":"bilinear","d":[0.0103,0.0061],"n":5},{"id":"L2","q":"Does neighbour gating beat bilinear?","a":"lenia_glu","b":"bilinear","d":[-0.0007,0.0055],"n":5},{"id":"L3","q":"Do the neighbours matter, beyond the unit's own window?","a":"lenia_glu","b":"window_glu","d":[-0.011,0.0058],"n":5},{"id":"L4","q":"The literal soft Conway gate vs swiglu","a":"life_glu","b":"swiglu","d":[0.0487,0.0107],"n":5},{"id":"R1","q":"Exact Conway modulation on SwiGLU vs SwiGLU","a":"conway_swiglu","b":"swiglu","d":[0.0022,0.0045],"n":5},{"id":"R2","q":"Learned-window Life modulation vs SwiGLU","a":"lenia_swiglu","b":"swiglu","d":[0.0024,0.0047],"n":5},{"id":"R3","q":"Learned window vs Conway's fixed window","a":"lenia_swiglu","b":"conway_swiglu","d":[0.0002,0.0072],"n":5},{"id":"R4","q":"2-D torus grid vs 1-D ring, same exact rule","a":"conway2d_swiglu","b":"conway_swiglu","d":[0.001,0.006],"n":5}]}</script>
+<script id="study" type="application/json">{"gates":{"swiglu":{"group":"baseline","desc":"silu(a) * b, the standard","lr":0.004,"n":5,"val":3.5512,"d":[0.0,0.0],"zeros":0.0,"near0":0.1187,"int4":0.771,"snap":0.206,"minutes":7.4,"int4g":null,"bind":null},"bilinear":{"group":"baseline","desc":"a * b, no nonlinearity; the key control for every sine gate","lr":0.004,"n":5,"val":3.5769,"d":[0.0257,0.007],"zeros":0.0,"near0":0.1122,"int4":0.096,"snap":0.027,"minutes":7.4,"int4g":null,"bind":null},"clipped_swiglu":{"group":"baseline","desc":"max(silu(a), 0) * b; same clipping as the stairs, no stairs","lr":0.001,"n":5,"val":3.5749,"d":[0.0237,0.0082],"zeros":0.7904,"near0":0.8117,"int4":0.072,"snap":0.017,"minutes":7.4,"int4g":null,"bind":null},"relu2_glu":{"group":"baseline","desc":"relu(a)^2 * b; sparse gate in the BitNet a4.8 style","lr":0.001,"n":5,"val":3.5796,"d":[0.0284,0.0109],"zeros":0.6342,"near0":0.7371,"int4":0.093,"snap":0.008,"minutes":7.3,"int4g":null,"bind":null},"drelu":{"group":"baseline","desc":"relu(a) * relu(b); TurboSparse's dReLU, the sparsity bar","lr":0.001,"n":5,"val":3.5733,"d":[0.0221,0.0158],"zeros":0.9017,"near0":0.7655,"int4":0.074,"snap":0.01,"minutes":7.3,"int4g":null,"bind":null},"quant_mid":{"group":"yours","desc":"hard midpoint stairs on silu(a), STE (the original design)","lr":0.002,"n":5,"val":3.5737,"d":[0.0226,0.0069],"zeros":0.75,"near0":0.75,"int4":0.088,"snap":0.0,"minutes":7.4,"int4g":null,"bind":null},"quant_round":{"group":"yours","desc":"zero-preserving stairs on silu(a): round to the step grid, STE","lr":0.002,"n":5,"val":3.5824,"d":[0.0313,0.0137],"zeros":0.829,"near0":0.829,"int4":0.07,"snap":0.0,"minutes":7.4,"int4g":null,"bind":null},"sine_glu":{"group":"yours","desc":"a + sin(2 pi a)/(2 pi): two-sided smooth staircase, alpha = 1","lr":0.004,"n":5,"val":3.5989,"d":[0.0477,0.0135],"zeros":0.0,"near0":0.0438,"int4":0.126,"snap":0.013,"minutes":7.6,"int4g":null,"bind":null},"sine_glu_a05":{"group":"yours","desc":"a + 0.5 sin(2 pi a)/(2 pi): partial ripple, alpha = 0.5","lr":0.004,"n":5,"val":3.5847,"d":[0.0335,0.0125],"zeros":0.0,"near0":0.0679,"int4":0.11,"snap":0.02,"minutes":7.6,"int4g":null,"bind":null},"leaky_sine":{"group":"yours","desc":"stairs for a > 0, wiggles around 0.1 a for a <= 0 (s = 0.1, beta = 1)","lr":0.002,"n":5,"val":3.6268,"d":[0.0757,0.0101],"zeros":0.0,"near0":0.1566,"int4":0.099,"snap":0.017,"minutes":7.6,"int4g":null,"bind":null},"leaky_sine_mini":{"group":"yours","desc":"stairs for a > 0, mini-stairs on 0.1 a for a <= 0 (s = beta = 0.1)","lr":0.004,"n":5,"val":3.5838,"d":[0.0326,0.0083],"zeros":0.0,"near0":0.1645,"int4":0.248,"snap":0.12,"minutes":7.6,"int4g":null,"bind":null},"anneal_sine_glu":{"group":"long shot","desc":"ripple amplitude ramps 0 -> 1 over 80% of training","lr":0.004,"n":5,"val":3.5915,"d":[0.0404,0.0097],"zeros":0.0,"near0":0.0509,"int4":0.117,"snap":0.015,"minutes":7.6,"int4g":null,"bind":null},"deadzone_sine_glu":{"group":"long shot","desc":"a - sin(2 pi a)/(2 pi): integer plateaus incl. a flat soft-off at 0","lr":0.004,"n":5,"val":3.6024,"d":[0.0512,0.0107],"zeros":0.0381,"near0":0.3509,"int4":0.083,"snap":0.014,"minutes":7.6,"int4g":null,"bind":null},"learned_ripple_glu":{"group":"long shot","desc":"a + amp_c sin(w_c a + phase_c)/w_c, learnable per channel","lr":0.004,"n":5,"val":3.5793,"d":[0.0282,0.0086],"zeros":0.0,"near0":0.1157,"int4":0.115,"snap":0.025,"minutes":8.3,"int4g":null,"bind":null,"trained":{"amp":0.263,"freq":1.207}},"pwl_stair_glu":{"group":"long shot","desc":"piecewise-linear stairs (no sin), blended 75% with a","lr":0.004,"n":5,"val":3.6005,"d":[0.0494,0.0099],"zeros":0.0,"near0":0.0509,"int4":0.117,"snap":0.012,"minutes":7.4,"int4g":null,"bind":null},"sine_up":{"group":"long shot","desc":"silu(a) * (b + sin(2 pi b)/(2 pi)): ripple on the value branch","lr":0.002,"n":5,"val":3.5736,"d":[0.0225,0.0072],"zeros":0.0,"near0":0.0801,"int4":0.275,"snap":0.119,"minutes":7.7,"int4g":null,"bind":null},"window_glu":{"group":"life","desc":"a * bell(8 sigmoid(a)): the unit's own activity through a learned window","lr":0.002,"n":5,"val":3.5872,"d":[0.0361,0.0111],"zeros":0.0,"near0":0.0677,"int4":0.06,"snap":0.132,"minutes":7.9,"int4g":null,"bind":null,"trained":{"centre":3.999,"width":2.282}},"life_glu":{"group":"life","desc":"soft Conway B3/S23 from 8 ring neighbours' sigmoid(a), fixed windows","lr":0.004,"n":5,"val":3.5998,"d":[0.0487,0.0107],"zeros":0.0,"near0":0.8532,"int4":0.046,"snap":0.075,"minutes":9.6,"int4g":null,"bind":null},"lenia_glu":{"group":"life","desc":"a * bell(neighbour count): bilinear signal, learned window on 8 neighbours","lr":0.004,"n":5,"val":3.5762,"d":[0.0251,0.0064],"zeros":0.0,"near0":0.1886,"int4":0.111,"snap":0.035,"minutes":10.5,"int4g":null,"bind":null,"trained":{"centre":3.995,"width":1.355}},"conway_swiglu":{"group":"life2","desc":"silu(a) modulated by exact Conway B3/S23 on binarized units, 1-D ring","lr":0.004,"n":5,"val":3.5534,"d":[0.0022,0.0045],"zeros":0.0,"near0":0.1815,"int4":2.002,"snap":1.379,"minutes":11.0,"int4g":null,"bind":null,"trained":{"tg":0.216,"theta":0.297,"lo":4.0,"hi":7.0}},"lenia_swiglu":{"group":"life2","desc":"silu(a) modulated by a Life rule with learned window edges, 1-D ring","lr":0.004,"n":5,"val":3.5535,"d":[0.0024,0.0047],"zeros":0.0,"near0":0.1915,"int4":3.174,"snap":2.795,"minutes":11.6,"int4g":null,"bind":null,"trained":{"tg":0.243,"theta":0.233,"lo":4.236,"hi":6.83}},"conway2d_swiglu":{"group":"life2","desc":"conway_swiglu on a 2-D torus grid with Conway's Moore neighbourhood","lr":0.004,"n":5,"val":3.5544,"d":[0.0032,0.0029],"zeros":0.0,"near0":0.1939,"int4":1.356,"snap":1.002,"minutes":10.5,"int4g":null,"bind":null,"trained":{"tg":0.221,"theta":0.29,"lo":4.0,"hi":7.0}},"silu_sparse":{"group":"sparse","desc":"forward max(silu(a), 0), backward silu's gradient: exact zeros, no dead units","lr":0.002,"n":5,"val":3.5614,"d":[0.0102,0.0086],"zeros":0.7689,"near0":0.7896,"int4":0.085,"snap":0.014,"minutes":7.4,"int4g":null,"bind":null},"drelu_ste":{"group":"sparse","desc":"forward relu(a) * relu(b) (dReLU), backward silu's gradient for a, identity for b","lr":0.002,"n":5,"val":4.5112,"d":[0.96,0.0719],"zeros":0.926,"near0":0.8571,"int4":0.153,"snap":0.001,"minutes":7.4,"int4g":null,"bind":null},"conway_sparse":{"group":"sparse","desc":"silu_sparse where weak units survive only by Conway's rule; strong units pass","lr":0.002,"n":5,"val":3.5871,"d":[0.036,0.0124],"zeros":0.9224,"near0":0.9262,"int4":0.048,"snap":0.009,"minutes":11.0,"int4g":null,"bind":null,"trained":{"theta":-0.051,"kappa":1.0}},"eco_swiglu":{"group":"rescale","desc":"swiglu's h times 1/sqrt(1 + mean(h^2)/K): shared energy budget, learnable K","lr":0.002,"n":5,"val":3.5546,"d":[0.0034,0.0054],"zeros":0.0,"near0":0.0804,"int4":0.19,"snap":0.089,"minutes":7.9,"int4g":0.026,"bind":0.7294,"trained":{"K":1.2871}},"subln_swiglu":{"group":"rescale","desc":"RMSNorm(h) before the down-projection (NormFormer-style)","lr":0.002,"n":5,"val":3.5888,"d":[0.0376,0.0086],"zeros":0.0,"near0":0.0556,"int4":0.303,"snap":0.125,"minutes":7.8,"int4g":0.032,"bind":null},"softcap_swiglu":{"group":"rescale","desc":"c tanh(h/c) on swiglu's h with c = 4: bounded, rescales nothing","lr":0.002,"n":5,"val":3.5566,"d":[0.0055,0.0103],"zeros":0.0,"near0":0.0795,"int4":0.111,"snap":0.193,"minutes":7.6,"int4g":0.022,"bind":0.0118},"eco_unit_swiglu":{"group":"final","desc":"swiglu's h times a per-unit gain 2 sigmoid(low-rank(h) - s ln(1 + E/K)), starts as swiglu","lr":0.002,"n":5,"val":3.555,"d":[0.0039,0.009],"zeros":0.0,"near0":0.0731,"int4":0.253,"snap":0.092,"minutes":9.2,"int4g":0.027,"bind":0.5792,"trained":{"K":0.2568}},"eco_sparse":{"group":"final","desc":"silu_sparse with eco_swiglu's energy budget: exact zeros plus rescaling","lr":0.004,"n":5,"val":3.558,"d":[0.0069,0.012],"zeros":0.7819,"near0":0.7988,"int4":0.143,"snap":0.01,"minutes":7.9,"int4g":0.015,"bind":0.672,"trained":{"K":1.2358}},"linear_ffn":{"group":"final","desc":"non-gated, no nonlinearity at all: W2 (W1 x), the floor","lr":0.002,"n":5,"val":3.8442,"d":[0.293,0.0066],"zeros":0.0,"near0":0.8097,"int4":0.008,"snap":0.04,"minutes":6.8,"int4g":0.002,"bind":null},"relu_ffn":{"group":"final","desc":"non-gated relu(W1 x): the sign decides which units pass","lr":0.002,"n":5,"val":3.5783,"d":[0.0271,0.0184],"zeros":0.9527,"near0":0.9553,"int4":0.021,"snap":0.012,"minutes":7.0,"int4g":0.004,"bind":null},"conway_ffn":{"group":"final","desc":"non-gated z * Conway(z): Conway's rule on the ring decides which units pass","lr":0.004,"n":5,"val":3.7637,"d":[0.2125,0.0111],"zeros":0.8887,"near0":0.9171,"int4":0.016,"snap":0.224,"minutes":11.7,"int4g":0.002,"bind":null},"bilinear_lifelearn":{"group":"final","desc":"bilinear forward; gradients to a scaled by 1 +- 0.2 by Conway's rule","lr":0.004,"n":5,"val":3.5795,"d":[0.0284,0.0073],"zeros":0.0,"near0":0.1117,"int4":0.098,"snap":0.026,"minutes":8.2,"int4g":0.016,"bind":null}},"checks":[{"id":"Q1","q":"Does the sine ripple beat a plain bilinear gate?","a":"sine_glu","b":"bilinear","d":[0.022,0.0089],"n":5},{"id":"Q1b","q":"Does a half-strength ripple beat bilinear?","a":"sine_glu_a05","b":"bilinear","d":[0.0078,0.0069],"n":5},{"id":"Q2","q":"Do zero-preserving stairs cost loss beyond clipping?","a":"quant_round","b":"clipped_swiglu","d":[0.0076,0.0073],"n":5},{"id":"Q2b","q":"Midpoint stairs vs zero-preserving stairs","a":"quant_mid","b":"quant_round","d":[-0.0087,0.0083],"n":5},{"id":"Q3","q":"Does the slanted, wiggly negative side help?","a":"leaky_sine","b":"sine_glu","d":[0.0279,0.0095],"n":5},{"id":"Q3b","q":"Do negative mini-stairs help?","a":"leaky_sine_mini","b":"sine_glu","d":[-0.0151,0.0096],"n":5},{"id":"LS","q":"Annealed ripple vs fixed ripple","a":"anneal_sine_glu","b":"sine_glu","d":[-0.0074,0.0088],"n":5},{"id":"LS","q":"Zero-plateau phase vs midpoint phase","a":"deadzone_sine_glu","b":"sine_glu","d":[0.0035,0.0102],"n":5},{"id":"LS","q":"Learned per-channel ripple vs bilinear","a":"learned_ripple_glu","b":"bilinear","d":[0.0024,0.0041],"n":5},{"id":"LS","q":"Piecewise-linear stairs vs sine stairs","a":"pwl_stair_glu","b":"sine_glu","d":[0.0016,0.0118],"n":5},{"id":"LS","q":"Ripple on the value branch vs SwiGLU","a":"sine_up","b":"swiglu","d":[0.0225,0.0072],"n":5},{"id":"L1","q":"Does a pointwise window gate beat bilinear?","a":"window_glu","b":"bilinear","d":[0.0103,0.0061],"n":5},{"id":"L2","q":"Does neighbour gating beat bilinear?","a":"lenia_glu","b":"bilinear","d":[-0.0007,0.0055],"n":5},{"id":"L3","q":"Do the neighbours matter, beyond the unit's own window?","a":"lenia_glu","b":"window_glu","d":[-0.011,0.0058],"n":5},{"id":"L4","q":"The literal soft Conway gate vs swiglu","a":"life_glu","b":"swiglu","d":[0.0487,0.0107],"n":5},{"id":"R1","q":"Exact Conway modulation on SwiGLU vs SwiGLU","a":"conway_swiglu","b":"swiglu","d":[0.0022,0.0045],"n":5},{"id":"R2","q":"Learned-window Life modulation vs SwiGLU","a":"lenia_swiglu","b":"swiglu","d":[0.0024,0.0047],"n":5},{"id":"R3","q":"Learned window vs Conway's fixed window","a":"lenia_swiglu","b":"conway_swiglu","d":[0.0002,0.0072],"n":5},{"id":"R4","q":"2-D torus grid vs 1-D ring, same exact rule","a":"conway2d_swiglu","b":"conway_swiglu","d":[0.001,0.006],"n":5},{"id":"S1","q":"SiLU-gradient sparse gate vs SwiGLU (the main bet)","a":"silu_sparse","b":"swiglu","d":[0.0102,0.0086],"n":5},{"id":"S2","q":"Does SiLU's gradient fix clipped SwiGLU?","a":"silu_sparse","b":"clipped_swiglu","d":[-0.0135,0.0051],"n":5},{"id":"S3","q":"Does SiLU's gradient fix dReLU?","a":"drelu_ste","b":"drelu","d":[0.9379,0.0647],"n":5},{"id":"S4","q":"dReLU with SiLU's gradient vs SwiGLU","a":"drelu_ste","b":"swiglu","d":[0.96,0.0719],"n":5},{"id":"S5","q":"What Conway pruning of weak units costs","a":"conway_sparse","b":"silu_sparse","d":[0.0257,0.0045],"n":5},{"id":"E1","q":"Ecosystem gate vs SwiGLU (the main bet)","a":"eco_swiglu","b":"swiglu","d":[0.0034,0.0054],"n":5},{"id":"E2","q":"Soft energy budget vs hard RMSNorm on h","a":"eco_swiglu","b":"subln_swiglu","d":[-0.0342,0.0075],"n":5},{"id":"E3","q":"Bounding without rescaling vs SwiGLU (predicted worse)","a":"softcap_swiglu","b":"swiglu","d":[0.0055,0.0103],"n":5},{"id":"E4","q":"Bounding with rescaling vs bounding alone","a":"eco_swiglu","b":"softcap_swiglu","d":[-0.0021,0.0052],"n":5},{"id":"F1","q":"Per-unit ecosystem vs SwiGLU (the last bet)","a":"eco_unit_swiglu","b":"swiglu","d":[0.0039,0.009],"n":5},{"id":"F2","q":"Per-unit rescaling vs one number per token","a":"eco_unit_swiglu","b":"eco_swiglu","d":[0.0004,0.0054],"n":5},{"id":"F3","q":"Sparse gate with an energy budget vs SwiGLU","a":"eco_sparse","b":"swiglu","d":[0.0069,0.012],"n":5},{"id":"F4","q":"Does the energy budget fix the sparse gate?","a":"eco_sparse","b":"silu_sparse","d":[-0.0034,0.0093],"n":5},{"id":"F5","q":"What a nonlinearity is worth (non-gated)","a":"relu_ffn","b":"linear_ffn","d":[-0.2659,0.0161],"n":5},{"id":"F6","q":"Conway's rule vs the sign as the only nonlinearity","a":"conway_ffn","b":"relu_ffn","d":[0.1854,0.0148],"n":5},{"id":"F7","q":"Does Conway-shaped learning help a bilinear FFN?","a":"bilinear_lifelearn","b":"bilinear","d":[0.0027,0.002],"n":5}]}</script>
 <script>
-/* The 22 gates of variants.py, line for line, for the page. Pure functions only. */
+/* The 34 gates of variants.py, line for line, for the page. Pure functions only. */
 (function (root) {
   "use strict";
   var TAU = 2 * Math.PI;
   var LIFE_SURVIVE = [2.5, 1.0], LIFE_BIRTH = [3.0, 0.6], RADIUS = 4;
   var LIFE_LO = 4, LIFE_HI = 7, LIFE_BETA = 2;          /* round 3: Conway's B3/S23 as a trapezoid over z = 2n + s */
   var LIFE2 = { conway_swiglu: true, lenia_swiglu: true, conway2d_swiglu: true };
+  var SPARSE = { silu_sparse: true, drelu_ste: true, conway_sparse: true };   /* round 4: forward sparse, backward SiLU */
+  /* round 5 and 6: gates that reshape h = g * u per token before the down-projection */
+  var HV = { eco_swiglu: true, subln_swiglu: true, softcap_swiglu: true, eco_sparse: true, eco_unit_swiglu: true };
+  var NONGATED = { linear_ffn: true, relu_ffn: true, conway_ffn: true };   /* round 6: one matrix in, no value branch */
+  var SOFTCAP_C = 4, LIFE_LEARN = 0.2, RMS_EPS = 1.1920928955078125e-7;   /* RMS_EPS: nn.RMSNorm's default in fp32 */
   function sig(x) { return 1 / (1 + Math.exp(-x)); }
   function silu(x) { return x * sig(x); }
   function siluGrad(x) { var s = sig(x); return s * (1 + x * (1 - s)); }
@@ -371,15 +386,62 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
       case "lenia_glu": return a * bell(n, P.centre, P.width);
       case "conway_swiglu": case "lenia_swiglu": case "conway2d_swiglu":
         return silu(a) * lifeRule(v, a > P.theta ? 1 : 0, n, P).m;
+      case "silu_sparse": return relu(silu(a));
+      case "drelu_ste": return relu(a);
+      case "conway_sparse": return sparseKeep(a, n, P, P.rho).g;     /* P.rho: the token's RMS of the clipped gates */
+      case "eco_swiglu": case "subln_swiglu": case "softcap_swiglu": case "eco_unit_swiglu": return silu(a);   /* h is reshaped later */
+      case "eco_sparse": return relu(silu(a));
+      case "linear_ffn": return a;
+      case "relu_ffn": return relu(a);
+      case "conway_ffn": return a * trapezoid(2 * n + (a > P.theta ? 1 : 0), LIFE_LO, LIFE_HI);   /* n: alive ring neighbours */
+      case "bilinear_lifelearn": return a;                           /* only the gradient differs: see learnScale */
     }
     throw new Error("unknown gate " + v);
   }
+  /* round 4, conway_sparse: c = max(silu(a), 0); a strong unit (c > kappa x the token's RMS of c) passes, a weak one
+     passes only where Conway's rule is on for its 0/1 aliveness s = 1[a > theta] and its ring neighbours */
+  function sparseKeep(a, n, P, rho) {
+    var c = relu(silu(a)), s = a > P.theta ? 1 : 0, z = 2 * n + s, r = trapezoid(z, LIFE_LO, LIFE_HI);
+    var strong = c > P.kappa * rho ? 1 : 0, keep = strong + (1 - strong) * r;
+    return { c: c, s: s, z: z, r: r, strong: strong, keep: keep, g: c * keep };
+  }
+  /* round 6, bilinear_lifelearn: the factor on a's gradient, 1.2 where Conway's rule (on 1[a > 0]) says alive, else 0.8 */
+  function learnScale(a, n) { return 1 + LIFE_LEARN * (2 * trapezoid(2 * n + (a > 0 ? 1 : 0), LIFE_LO, LIFE_HI) - 1); }
+  /* rounds 5-6: reshape one token's h (all units) before W3, as GatedFFN.reshape_h. P.K: energy budget K = exp(eco_logk);
+     subln: P.gain (h_norm.weight, scalar or per unit); eco_unit: P.s (eco_s, scalar or per unit) and optional P.ecoDown
+     (rank x H) and P.ecoUp (H x rank), zero at the start of training. Returns the new h and the per-unit factor h'/h. */
+  function reshape(v, h, P) {
+    var H = h.length, E = h.reduce(function (t, x) { return t + x * x; }, 0) / H, out, f;
+    var per = function (x, i) { return Array.isArray(x) ? x[i] : (x == null ? 1 : x); };
+    if (v === "eco_swiglu" || v === "eco_sparse") {
+      var k = 1 / Math.sqrt(1 + E / P.K);
+      f = h.map(function () { return k; });
+    } else if (v === "subln_swiglu") {
+      var q = 1 / Math.sqrt(E + RMS_EPS);
+      f = h.map(function (_, i) { return q * per(P.gain, i); });
+    } else if (v === "softcap_swiglu") {
+      out = h.map(function (x) { return SOFTCAP_C * Math.tanh(x / SOFTCAP_C); });
+      return { h: out, f: h.map(function (x, i) { return x === 0 ? 1 : out[i] / x; }), E: E };
+    } else if (v === "eco_unit_swiglu") {
+      var crowd = Math.log1p(E / P.K), inv = 1 / Math.sqrt(E + 1e-6), low = [];
+      if (P.ecoDown) for (var r = 0; r < P.ecoDown.length; r++) {
+        var t = 0; for (var j = 0; j < H; j++) t += P.ecoDown[r][j] * h[j] * inv;
+        low.push(silu(t));
+      }
+      f = h.map(function (_, i) {
+        var lr = 0; if (P.ecoUp) for (var r2 = 0; r2 < low.length; r2++) lr += P.ecoUp[i][r2] * low[r2];
+        return 2 * sig(lr - per(P.s, i) * crowd);
+      });
+    } else throw new Error("no h step for " + v);
+    return { h: h.map(function (x, i) { return x * f[i]; }), f: f, E: E };
+  }
   function up(v, b, P) {
-    if (v === "drelu") return relu(b);
+    if (NONGATED[v]) return 1;                                       /* round 6: no value branch, h = g */
+    if (v === "drelu" || v === "drelu_ste") return relu(b);
     if (v === "sine_up") return b + ripple(b, P.step);
     return b;
   }
-  function usesNeighbours(v) { return v === "life_glu" || v === "lenia_glu" || !!LIFE2[v]; }
+  function usesNeighbours(v) { return v === "life_glu" || v === "lenia_glu" || !!LIFE2[v] || v === "conway_sparse" || v === "conway_ffn" || v === "bilinear_lifelearn"; }
   function ringCount(p) {                 /* summed p of the 2*RADIUS nearest units on the ring, self excluded */
     var H = p.length, out = new Array(H);
     for (var i = 0; i < H; i++) {
@@ -404,6 +466,15 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
   }
   /* one FFN layer of hidden units: returns per-unit a, b, p (aliveness), n, g, u, h (+ z, r, m for round 3) */
   function layer(v, a, b, P) {
+    if (v === "conway_sparse") {
+      var cs = a.map(function (x) { return relu(silu(x)); });
+      var rho = Math.sqrt(cs.reduce(function (t, x) { return t + x * x; }, 0) / cs.length);
+      var alive = a.map(function (x) { return x > P.theta ? 1 : 0; }), nb = ringCount(alive);
+      return a.map(function (ai, i) {
+        var K = sparseKeep(ai, nb[i], P, rho), u = up(v, b[i], P);
+        return { a: ai, b: b[i], p: K.s, n: nb[i], z: K.z, r: K.r, m: K.keep, strong: K.strong, rho: rho, g: K.g, u: u, h: K.g * u };
+      });
+    }
     if (LIFE2[v]) {
       var s = a.map(function (x) { return x > P.theta ? 1 : 0; });
       var cnt = v === "conway2d_swiglu" ? mooreCount(s) : ringCount(s);
@@ -412,20 +483,37 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
         return { a: ai, b: b[i], p: s[i], n: cnt[i], z: L.z, r: L.r, m: L.m, g: g, u: u, h: g * u };
       });
     }
+    if (v === "conway_ffn" || v === "bilinear_lifelearn") {        /* round 6: Conway's exact rule on 0/1 aliveness */
+      var th = v === "conway_ffn" ? P.theta : 0;
+      var al = a.map(function (x) { return x > th ? 1 : 0; }), cn = ringCount(al);
+      return a.map(function (ai, i) {
+        var z = 2 * cn[i] + al[i], r = trapezoid(z, LIFE_LO, LIFE_HI), u = up(v, b[i], P);
+        var g = v === "conway_ffn" ? ai * r : ai, m = v === "conway_ffn" ? r : learnScale(ai, cn[i]);
+        return { a: ai, b: b[i], p: al[i], n: cn[i], z: z, r: r, m: m, g: g, u: u, h: g * u };
+      });
+    }
     var p = a.map(sig), n = usesNeighbours(v) ? ringCount(p) : null;
-    return a.map(function (ai, i) {
+    var rows = a.map(function (ai, i) {
       var g = gate(v, ai, P, n ? n[i] : 0), u = up(v, b[i], P);
       return { a: ai, b: b[i], p: p[i], n: n ? n[i] : null, g: g, u: u, h: g * u };
     });
+    if (HV[v]) {                                                   /* rounds 5-6: the token-level step on h */
+      var R = reshape(v, rows.map(function (r) { return r.h; }), P);
+      rows.forEach(function (r, i) { r.hraw = r.h; r.h = R.h[i]; r.f = R.f[i]; r.E = R.E; });
+    }
+    return rows;
   }
   root.GATES = {
     sig: sig, silu: silu, siluGrad: siluGrad, relu: relu, ripple: ripple, bell: bell, roundHalfEven: roundHalfEven,
-    trapezoid: trapezoid, smoothWindow: smoothWindow, lifeRule: lifeRule, gridShape: gridShape,
+    trapezoid: trapezoid, smoothWindow: smoothWindow, lifeRule: lifeRule, sparseKeep: sparseKeep, gridShape: gridShape,
     mooreNeighbours: mooreNeighbours, mooreCount: mooreCount,
-    gate: gate, up: up, layer: layer, ringCount: ringCount, usesNeighbours: usesNeighbours,
-    STE: { quant_mid: true, quant_round: true }, LIFE2: LIFE2, LIFE_SURVIVE: LIFE_SURVIVE, LIFE_BIRTH: LIFE_BIRTH, RADIUS: RADIUS
+    gate: gate, up: up, layer: layer, ringCount: ringCount, usesNeighbours: usesNeighbours, reshape: reshape, learnScale: learnScale,
+    STE: { quant_mid: true, quant_round: true, silu_sparse: true, drelu_ste: true, conway_sparse: true, eco_sparse: true },
+    LIFE2: LIFE2, SPARSE: SPARSE, HV: HV, NONGATED: NONGATED, SOFTCAP_C: SOFTCAP_C, LIFE_LEARN: LIFE_LEARN,
+    LIFE_SURVIVE: LIFE_SURVIVE, LIFE_BIRTH: LIFE_BIRTH, RADIUS: RADIUS
   };
 })(typeof window !== "undefined" ? window : globalThis);
+
 
 </script>
 <script>
@@ -437,10 +525,26 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
   var NS = "http://www.w3.org/2000/svg";
   var MINUS = "−";
   var REDUCE = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var GROUPS = [["baseline", "Baselines"], ["yours", "Stair gates"], ["long shot", "Long shots"], ["life", "Life gates"], ["life2", "Life on SiLU"]];
+  var GROUPS = [["baseline", "Baselines"], ["yours", "Stair gates"], ["long shot", "Long shots"], ["life", "Life gates"], ["life2", "Life on SiLU"], ["sparse", "Sparse, SiLU gradient"],
+                ["rescale", "Rescaling h"], ["final", "Final round"]];
   var STEPPED = { quant_mid: 1, quant_round: 1, sine_glu: 1, sine_glu_a05: 1, leaky_sine: 1, leaky_sine_mini: 1, anneal_sine_glu: 1,
                   deadzone_sine_glu: 1, learned_ripple_glu: 1, pwl_stair_glu: 1, sine_up: 1 };
-  var LIFE = { window_glu: 1, life_glu: 1, lenia_glu: 1, conway_swiglu: 1, lenia_swiglu: 1, conway2d_swiglu: 1 };
+  var LIFE = { window_glu: 1, life_glu: 1, lenia_glu: 1, conway_swiglu: 1, lenia_swiglu: 1, conway2d_swiglu: 1, conway_sparse: 1, conway_ffn: 1, bilinear_lifelearn: 1 };
+  function BITS(v) { return !!G.LIFE2[v] || v === "conway_sparse" || v === "conway_ffn" || v === "bilinear_lifelearn"; }   /* 0/1 aliveness, Conway's exact rule */
+  /* rounds 5-6: the per-token step on h, for one value x with the token's energy E held at the slider value */
+  function hstep(v, x, p) {
+    if (v === "eco_swiglu" || v === "eco_sparse") return x / Math.sqrt(1 + p.E / p.K);
+    if (v === "subln_swiglu") return x / Math.sqrt(p.E + 1.1920928955078125e-7);
+    if (v === "softcap_swiglu") return G.SOFTCAP_C * Math.tanh(x / G.SOFTCAP_C);
+    return x * 2 * G.sig(-p.s * Math.log1p(p.E / p.K));            /* eco_unit_swiglu, crowding term only */
+  }
+  /* the rule's effect on one unit, for tooltips and readouts */
+  function ruleTail(v, r) {
+    if (v === "conway_sparse") return r.strong ? ", strong" : ", weak";
+    if (v === "conway_ffn") return r.r > 0.5 ? ", passes a" : ", outputs 0";
+    if (v === "bilinear_lifelearn") return ", gradient × " + r.m.toFixed(1);
+    return ", m = " + r.m.toFixed(2);
+  }
   var INFO = {
     swiglu: ["g = silu(a) = a · σ(a)", "The standard gate. silu is a smooth ReLU: close to 0 for negative a, close to a for positive a, with a small dip to about −0.28 near a = −1.3."],
     bilinear: ["g = a", "No nonlinearity at all: the layer outputs a · b, a pure quadratic form. Every sine gate is this line plus a ripple, so bilinear is their control."],
@@ -463,12 +567,24 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     lenia_glu: ["g = a · bell(n; c, w)\nn = Σ σ(a) over the 8 nearest units on the ring", "A bilinear signal whose gain is set by the neighbourhood: a unit passes its own a when its neighbours' summed activity lands inside a learned window. With the neighbours fixed, g is a straight line through 0."],
     conway_swiglu: ["g = silu(a) · m      m = 1 + tanh(γ) · (r − 1)\nr = trapezoid(z),  z = 2n + s,  s = 1[a > θ]\nn = alive units among the 8 nearest on the ring", "SwiGLU modulated by the exact Game of Life rule. A unit is alive when a > θ, and z = 2n + s packs its own state and its alive-neighbour count into one number. The four-ReLU trapezoid is 1 for exactly z = 5, 6 and 7: survive with 2 or 3, or be born with 3. The rule only scales silu(a), between 0 and 2, and tanh(γ) starts at 0, so the gate starts as plain SwiGLU. Training settled near tanh(γ) = +0.22 and θ = +0.30, so units where the rule is off are damped by about a fifth."],
     lenia_swiglu: ["g = silu(a) · m      m = 1 + tanh(γ) · (r − 1)\nr = trapezoid(z; lo, hi),  z = 2n + s,  lo and hi learned per unit", "conway_swiglu with the rule's window edges learned per unit, starting at Conway's 4 and 7. Training moved them in a little, to 4.24 and 6.83 on average, and kept a similar damping (tanh(γ) about +0.24)."],
-    conway2d_swiglu: ["g = silu(a) · m,  same rule as conway_swiglu\nn = alive units among the 8 Moore neighbours on a 2-D torus", "conway_swiglu on a 2-D grid, exactly like Conway's board: the network's 1,344 units form a 32 × 42 torus and each unit counts its 8 Moore neighbours. Here the 64 units form an 8 × 8 grid."]
+    conway2d_swiglu: ["g = silu(a) · m,  same rule as conway_swiglu\nn = alive units among the 8 Moore neighbours on a 2-D torus", "conway_swiglu on a 2-D grid, exactly like Conway's board: the network's 1,344 units form a 32 × 42 torus and each unit counts its 8 Moore neighbours. Here the 64 units form an 8 × 8 grid."],
+    silu_sparse: ["g = max(silu(a), 0)          forward\nbackward pass: d silu(a)/da  (straight-through)", "clipped_swiglu's forward pass with SwiGLU's backward pass. Every unit with a ≤ 0 is exactly off, so a sparse kernel can skip it, but the gradient still flows as if the gate were silu(a). Units below zero keep learning instead of going dead. It is the study's best sparse gate: 77% exact zeros for +0.010 in loss, and a small INT4 penalty."],
+    drelu_ste: ["g = relu(a)      u = relu(b)       forward\nbackward pass: d silu(a)/da for a,  identity for b", "dReLU's forward pass, the sparsity bar, with smooth gradients passed straight through on both branches. It is the cautionary result of round 4: it trains steadily but stalls near a loss of 4.5 on every seed, because the gradient it trains on no longer matches the function it runs."],
+    conway_sparse: ["c = max(silu(a), 0)      strong = c > κ · RMS(c)\ng = c        if strong\ng = c · r    otherwise,  r = Conway's rule on s = 1[a > θ] and 8 ring neighbours", "silu_sparse that also prunes weak units: a unit whose clipped gate is large next to the token's RMS always passes; a weak one passes only where Conway's exact rule is on for it. Pruning ramps in early in training (κ from 0 to 1). It reaches 92% exact zeros at +0.036 in loss, has the second-smallest INT4 penalty in the study (after life_glu), and its aliveness bits hardly flip under quantization."],
+    eco_swiglu: ["g = silu(a)      h ← h / √(1 + E/K)\nE = mean(h²) over the token's units,  K learned per layer (starts at 1)", "SwiGLU with a shared energy budget per token: when the token's activity E grows past K, every unit is scaled down by the same factor, so one large unit dims all the others. It starts within 1% of SwiGLU. Training kept the budget binding (h scaled by about 0.73) and it ties SwiGLU, +0.003 in loss. It also survives a learning rate of 8e-3, where SwiGLU collapses, though it trains best at 2e-3."],
+    subln_swiglu: ["g = silu(a)      h ← gain · h / √(mean(h²) + ε)", "SwiGLU with RMSNorm on h, the hard version of the energy budget, as in NormFormer: every token's h is forced to the same RMS, times a learned gain per unit. It is the one SiLU gate in the study that loses to SwiGLU, by 0.038."],
+    softcap_swiglu: ["g = silu(a)      h ← 4 · tanh(h / 4)", "Every value of h is capped smoothly at ±4, and nothing is rescaled. Prior work predicted that bounding without rescaling hurts. Here it ties SwiGLU (+0.006), but the cap reached only about 1% of values, so the test was mild."],
+    eco_unit_swiglu: ["g = silu(a)      h ← h · 2σ(ℓ − s · ln(1 + E/K))\nℓ = U · silu(D · h / √E), a learned rank-16 map;  s learned per unit", "Every unit gets its own gain between 0 and 2, set by a learned low-rank view of the whole token plus a shared crowding term. U and s start at 0, so the gain starts at exactly 1: plain SwiGLU. Training pulled the gains down to about 0.58, and it ties both SwiGLU and eco_swiglu. The curves show the crowding term only; the low-rank part exists only in the trained model."],
+    eco_sparse: ["g = max(silu(a), 0)      forward;  backward d silu(a)/da\nh ← h / √(1 + E/K)", "silu_sparse with eco_swiglu's energy budget: exact zeros forward, SiLU's gradient backward, and a shared per-token budget on h. The budget let it train at 4e-3. It keeps 78% exact zeros and ties SwiGLU (+0.007 ± 0.012), the original goal of the study, though the interval is too wide to call it as good."],
+    linear_ffn: ["h = a = W₁x      out = W₃h      (no gate, no value branch)", "A feed-forward layer with no nonlinearity at all: two matrices, hidden 2,048 so the parameter count stays within 2% of SwiGLU's. The whole layer is one linear map. It is the floor of the study, 0.29 behind SwiGLU."],
+    relu_ffn: ["h = relu(a)      (no gate, no value branch)", "The classic transformer feed-forward layer: two matrices with a ReLU between them, hidden 2,048. The sign decides which units pass, so 95% of h is exactly zero. It recovers 0.27 nats of linear_ffn's gap and ties bilinear."],
+    conway_ffn: ["h = a · r      r = Conway's rule on s = 1[a > θ] and 8 ring neighbours\n(no gate, no value branch)", "Conway's exact B3/S23 rule as the only nonlinearity: a unit passes its own a, sign and all, when the rule says it lives, and outputs exactly 0 otherwise. It recovers about 0.08 of the 0.27 nats a ReLU recovers."],
+    bilinear_lifelearn: ["g = a      forward: exactly bilinear\nbackward: a's gradient × 1.2 where Conway's rule on 1[a > 0] says alive, × 0.8 elsewhere", "A bilinear layer whose forward pass ignores the rule entirely; Conway's rule only reshapes learning, giving the units it keeps alive 50% more gradient than the rest. It ends 0.003 behind plain bilinear: a small cost, and possibly a chance result."]
   };
-  var DEFAULTS = { step: 1, progress: 1, amp: 0.5, freq: 1, phase: 0, centre: 4, width: 2, tg: 0, theta: 0, lo: 4, hi: 7 };
+  var DEFAULTS = { step: 1, progress: 1, amp: 0.5, freq: 1, phase: 0, centre: 4, width: 2, tg: 0, theta: 0, lo: 4, hi: 7, kappa: 1, rho: 0.5, K: 1, s: 0, E: 0.3 };
   var params = {};
   /* the round-3 gates open at their trained mean: at the start of training they are plain SwiGLU */
-  ORDER.forEach(function (v) { params[v] = Object.assign({}, DEFAULTS, G.LIFE2[v] ? STUDY[v].trained : {}); });
+  ORDER.forEach(function (v) { params[v] = Object.assign({}, DEFAULTS, BITS(v) ? STUDY[v].trained : {}); });
   var state = { v: "sine_glu", a: 1.3, n: 4, refs: true, snap: false, sigma: 1.2, playing: !REDUCE, hover: -1 };
 
   function S(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
@@ -484,7 +600,7 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
   function num(x, d) { if (d == null) d = 2; var s = Math.abs(x).toFixed(d); return (x < 0 && +s !== 0 ? MINUS : "") + s; }
   function sgn(x, d) { var s = Math.abs(x).toFixed(d); return (x < 0 && +s !== 0 ? MINUS : "+") + s; }
   function pct(x) { return (x * 100).toFixed(1) + "%"; }
-  function lrLabel(lr) { return ({ "0.0005": "5e-4", "0.001": "1e-3", "0.002": "2e-3", "0.004": "4e-3", "0.008": "8e-3" })[String(lr)] || String(lr); }
+  function lrLabel(lr) { return ({ "0.0005": "5e-4", "0.001": "1e-3", "0.002": "2e-3", "0.004": "4e-3", "0.008": "8e-3", "0.016": "1.6e-2" })[String(lr)] || String(lr); }
   function P() { return params[state.v]; }
   function slug(v) { return v.replace(/_/g, "-"); }
 
@@ -608,14 +724,17 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     document.getElementById("g-text").textContent = info[1];
     var gl = info[0].split("\n")[0].split("   ")[0].trim();
     document.getElementById("flow-gate").textContent = gl.length > 30 ? gl.slice(0, 29) + "…" : gl;
-    document.getElementById("flow-up").textContent = v === "drelu" ? "u = relu(b)" : v === "sine_up" ? "u = b + r(b)" : "u = b";
+    document.getElementById("flow-up").textContent = G.NONGATED[v] ? "no value branch: h = g" : (v === "drelu" || v === "drelu_ste") ? "u = relu(b)" : v === "sine_up" ? "u = b + r(b)" : "u = b";
     var facts = document.getElementById("g-facts"); facts.replaceChildren();
     [["Val loss", s.val.toFixed(4)],
      ["vs swiglu", v === "swiglu" ? "reference" : sgn(s.d[0], 4) + " ± " + s.d[1].toFixed(4)],
      ["Best LR", lrLabel(s.lr)],
      ["Exact zeros in h", pct(s.zeros)],
      ["|g| < 0.05", pct(s.near0)],
-     ["INT4 penalty", sgn(s.int4, 3)]].forEach(function (f) { var d = H("div", null, null, facts); H("dt", null, f[0], d); H("dd", null, f[1], d); });
+     ["INT4 penalty", sgn(s.int4, 3)]].concat(s.int4g != null ? [["INT4, per group of 64", sgn(s.int4g, 3)]] : [])
+      .concat(s.bind != null ? [[v === "softcap_swiglu" ? "h values near the cap" : v === "eco_unit_swiglu" ? "Mean per-unit gain" : "Mean factor on h",
+                                 v === "softcap_swiglu" ? pct(s.bind) : s.bind.toFixed(2)]] : [])
+      .forEach(function (f) { var d = H("div", null, null, facts); H("dt", null, f[0], d); H("dd", null, f[1], d); });
     var ck = document.getElementById("g-checks"); ck.replaceChildren();
     CHECKS.filter(function (c) { return c.a === v || c.b === v; }).forEach(function (c) {
       var row = H("div", null, null, ck); H("b", null, c.id === "LS" ? "LS" : c.id, row);
@@ -641,7 +760,12 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     tg: ["c-tg", "o-tg", function (x) { return sgn(x, 2); }],
     theta: ["c-theta", "o-theta", function (x) { return sgn(x, 2); }],
     lo: ["c-lo", "o-lo", function (x) { return x.toFixed(2); }],
-    hi: ["c-hi", "o-hi", function (x) { return x.toFixed(2); }]
+    hi: ["c-hi", "o-hi", function (x) { return x.toFixed(2); }],
+    kappa: ["c-kappa", "o-kappa", function (x) { return x.toFixed(2); }],
+    rho: ["c-rho", "o-rho", function (x) { return x.toFixed(2); }],
+    K: ["c-K", "o-K", function (x) { return x.toFixed(2); }],
+    s: ["c-s", "o-s", function (x) { return sgn(x, 2); }],
+    E: ["c-E", "o-E", function (x) { return x.toFixed(2); }]
   };
   function syncControls() {
     var p = P();
@@ -656,13 +780,20 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     document.getElementById("w-ripple").hidden = v !== "learned_ripple_glu";
     document.getElementById("w-window").hidden = !(v === "window_glu" || v === "lenia_glu");
     document.getElementById("w-n").hidden = !G.usesNeighbours(v);
-    document.getElementById("w-life2").hidden = !G.LIFE2[v];
+    document.getElementById("w-life2").hidden = !BITS(v) || v === "bilinear_lifelearn";
+    document.getElementById("w-tg").hidden = !G.LIFE2[v];
+    document.getElementById("life2-presets").hidden = v === "conway_ffn";            /* no trained threshold was recorded */
+    document.getElementById("w-eco").hidden = !G.HV[v] || v === "softcap_swiglu";
+    document.getElementById("w-K").hidden = v === "subln_swiglu";
+    document.getElementById("w-s").hidden = v !== "eco_unit_swiglu";
+    document.getElementById("eco-presets").hidden = v === "subln_swiglu";
+    document.getElementById("w-sparse").hidden = v !== "conway_sparse";
     document.getElementById("w-lo").hidden = document.getElementById("w-hi").hidden = v !== "lenia_swiglu";
     var cn = document.getElementById("c-n");
-    if (G.LIFE2[v]) { cn.step = "1"; state.n = Math.round(state.n); cn.value = state.n; document.getElementById("o-n").textContent = String(state.n); }
+    if (BITS(v)) { cn.step = "1"; state.n = Math.round(state.n); cn.value = state.n; document.getElementById("o-n").textContent = String(state.n); }
     else cn.step = "0.05";
-    document.getElementById("n-help").textContent = !G.LIFE2[v] ? "n sums σ(a) over the 8 nearest units. With random activations it sits near 4."
-      : (v === "conway2d_swiglu" ? "n counts alive units (a > θ) among the 8 Moore neighbours on the grid." : "n counts alive units (a > θ) among the 8 nearest units on the ring.")
+    document.getElementById("n-help").textContent = !BITS(v) ? "n sums σ(a) over the 8 nearest units. With random activations it sits near 4."
+      : (v === "conway2d_swiglu" ? "n counts alive units (a > θ) among the 8 Moore neighbours on the grid." : "n counts alive units (a > " + (v === "bilinear_lifelearn" ? "0" : "θ") + ") among the 8 nearest units on the ring.")
         + " With θ = 0 and random activations it is Binomial(8, ½), mean 4.";
   }
   Object.keys(CTL).forEach(function (k) {
@@ -681,9 +812,11 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
   document.querySelectorAll("[data-preset]").forEach(function (b) {
     b.addEventListener("click", function () {
       var v = state.v, p = P(), t = STUDY[v].trained || {};
-      if (b.dataset.preset === "init") { p.amp = 0.5; p.freq = 1; p.phase = 0; p.centre = 4; p.width = 2; p.tg = 0; p.theta = 0; p.lo = 4; p.hi = 7; }
+      if (b.dataset.preset === "init") { p.amp = 0.5; p.freq = 1; p.phase = 0; p.centre = 4; p.width = 2; p.tg = 0; p.theta = 0; p.lo = 4; p.hi = 7; p.kappa = v === "conway_sparse" ? 0 : 1; p.K = 1; p.s = 0; }
+      else if (G.HV[v]) { if (t.K != null) p.K = t.K; }
       else if (v === "learned_ripple_glu") { p.amp = t.amp; p.freq = t.freq; p.phase = 0; }
       else if (G.LIFE2[v]) { p.tg = t.tg; p.theta = t.theta; p.lo = t.lo; p.hi = t.hi; }
+      else if (v === "conway_sparse") { p.theta = t.theta; p.kappa = t.kappa; }
       else { p.centre = t.centre; p.width = t.width; }
       syncControls(); drawShape(); renderLifeStatic(); dirty = true;
     });
@@ -701,6 +834,7 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     var series = [{ f: f, color: "var(--s1)", label: v }];
     if (G.STE[v]) series.push({ f: G.silu, color: "var(--s2)", label: "silu(a), what the backward pass sees", fit: false });
     if (state.snap) series.push({ f: snapF(f), color: "var(--s3)", label: "snapped to the Δ/2 grid" });
+    if (G.HV[v]) series.push({ f: function (a) { return hstep(v, f(a), p); }, color: "var(--s3)", label: "after the step on h, for u = 1" + (v === "softcap_swiglu" ? "" : " and E = " + p.E.toFixed(2)) });
     if (state.refs) {
       if (v !== "bilinear") series.push({ f: function (a) { return a; }, color: "var(--ref)", label: "bilinear", width: 1.5, fit: false });
       if (v !== "swiglu") series.push({ f: G.silu, color: "var(--muted)", label: "swiglu", width: 1.5, fit: false });
@@ -712,16 +846,24 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
         aria: v + " gate value against a", xlabel: "a" });
     };
     redrawCurve(Math.floor(curveBox.clientWidth) || 600);
-    var capc = G.LIFE2[v] ? "Drawn with n = " + state.n + " alive neighbours held fixed. The jump at a = θ is the unit itself coming alive: z = 2n + s moves by one, which can switch the rule. In the network n changes with every token." :
+    var capc = G.HV[v] ? "The gate itself is " + (v === "eco_sparse" ? "silu_sparse's" : "SwiGLU's") + "; the step acts on h = g · u, after the gate. The green curve shows what reaches the down-projection for u = 1" +
+        (v === "softcap_swiglu" ? ": only values beyond about ±2 bend." : v === "subln_swiglu" ? " when the token's energy is E: RMSNorm rescales every unit by 1/√E." : " when the token's energy is E: one shared factor for every unit" + (v === "eco_unit_swiglu" ? " here, because the learned per-unit part starts at 0." : ".")) :
+      v === "conway_ffn" ? "Drawn with n = " + state.n + " alive neighbours held fixed. The rule passes a, sign and all, or blocks it completely; the jump at a = θ is the unit itself coming alive." :
+      v === "bilinear_lifelearn" ? "The forward pass is exactly bilinear; Conway's rule shows up only in the gradient below." :
+      G.NONGATED[v] ? "There is no value branch, so this is h itself, before the down-projection." :
+      v === "conway_sparse" ? "Drawn with n = " + state.n + " alive neighbours and a token RMS of " + p.rho.toFixed(2) + ". Above κ · RMS a unit is strong and passes; below it, it passes only where the rule is on. The orange curve is the function the gradient comes from." :
+      G.LIFE2[v] ? "Drawn with n = " + state.n + " alive neighbours held fixed. The jump at a = θ is the unit itself coming alive: z = 2n + s moves by one, which can switch the rule. In the network n changes with every token." :
       G.usesNeighbours(v) ? "Drawn with the neighbour count held at n = " + state.n.toFixed(2) + "; in the network n changes with every token." :
       v === "window_glu" ? "The window acts on 8σ(a), so it closes for large |a| on either side: a large activation is shut off, not passed." :
       G.STE[v] ? "Forward pass in blue; the orange curve is the function the gradient comes from." :
       "Hover the chart to read every curve at one a.";
     document.getElementById("cap-curve").textContent = capc;
 
-    var sl = G.STE[v] ? G.siluGrad : G.LIFE2[v] ? function (a) { return G.siluGrad(a) * G.lifeRule(v, a > p.theta ? 1 : 0, state.n, p).m; } : slopeF(f);
-    document.getElementById("slope-title").textContent = G.STE[v] ? "Gradient used in training" : G.LIFE2[v] ? "Slope with the rule state held fixed" : "Slope dg/da";
-    var ss = [{ f: sl, color: "var(--s1)", label: G.STE[v] ? "d silu(a)/da (straight-through)" : "dg/da of " + v }];
+    var sl = v === "bilinear_lifelearn" ? function (a) { return G.learnScale(a, state.n); } :
+      v === "conway_ffn" ? function (a) { return G.trapezoid(2 * state.n + (a > p.theta ? 1 : 0), 4, 7); } :
+      v === "conway_sparse" ? function (a) { return G.siluGrad(a) * G.sparseKeep(a, state.n, p, p.rho).keep; } : G.STE[v] ? G.siluGrad : G.LIFE2[v] ? function (a) { return G.siluGrad(a) * G.lifeRule(v, a > p.theta ? 1 : 0, state.n, p).m; } : slopeF(f);
+    document.getElementById("slope-title").textContent = G.STE[v] || v === "bilinear_lifelearn" ? "Gradient used in training" : G.LIFE2[v] || v === "conway_ffn" ? "Slope with the rule state held fixed" : "Slope dg/da";
+    var ss = [{ f: sl, color: "var(--s1)", label: G.STE[v] ? "d silu(a)/da (straight-through)" : v === "bilinear_lifelearn" ? "gradient factor on a, n = " + state.n : "dg/da of " + v }];
     if (state.refs) ss.push({ f: function () { return 1; }, color: "var(--ref)", label: "bilinear (slope 1)", width: 1.5, fit: false });
     var ks = document.getElementById("keys-slope"); ks.replaceChildren();
     ss.forEach(function (s) { keyLine(ks, s.color, s.label, { thin: s.width === 1.5 }); });
@@ -735,13 +877,21 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
       quant_mid: "The real forward slope is 0 between the jumps, so without the straight-through trick no gradient would flow.",
       quant_round: "The real forward slope is 0 between the jumps, so without the straight-through trick no gradient would flow.",
       relu2_glu: "Slope 2a for a > 0, so large activations get large gradients.",
-      bilinear: "Slope 1 everywhere: every unit always gets the full gradient." };
-    document.getElementById("cap-slope").textContent = flat[v] || (G.LIFE2[v]
+      bilinear: "Slope 1 everywhere: every unit always gets the full gradient.",
+      linear_ffn: "Slope 1 everywhere: the layer is linear.",
+      relu_ffn: "Slope 1 above zero and exactly 0 below: units with a ≤ 0 get no gradient through the gate.",
+      conway_ffn: "With the rule state held fixed the slope is 1 where the rule passes a and 0 elsewhere. The backward pass adds smooth surrogates through θ and the rule window, as in round 3.",
+      bilinear_lifelearn: "1.2 where Conway's rule says the unit is alive, 0.8 elsewhere: the forward slope is 1 everywhere, and only training sees the rule. With n held fixed, the factor changes where a crosses 0." };
+    var sparseCap = { silu_sparse: "Forward, every unit with a ≤ 0 is exactly zero; backward, the gradient is silu's everywhere. Units below zero keep learning, where clipped_swiglu's gradient there is exactly 0.",
+      drelu_ste: "The gate's gradient is silu's, and the value branch passes its gradient straight through, so training sees a smooth model that is not the one it runs. On every seed it stalled near a loss of 4.5.",
+      conway_sparse: "silu's gradient scaled by whether the unit is kept; the rule adds a smooth surrogate through θ, as in round 3.",
+      eco_sparse: "Forward, every unit with a ≤ 0 is exactly zero; backward, silu's gradient everywhere, as in silu_sparse. The budget on h adds its own term through E." };
+    document.getElementById("cap-slope").textContent = sparseCap[v] || flat[v] || (G.LIFE2[v]
       ? "silu's slope times the modulation m. The backward pass adds two smooth surrogates, one through the aliveness threshold and one through the rule window; that is how θ, γ and the window edges learn."
       : "Where the slope is near zero, training barely moves a unit with that pre-activation.");
 
     var upfig = document.getElementById("upfig");
-    upfig.hidden = !(v === "drelu" || v === "sine_up");
+    upfig.hidden = !(v === "drelu" || v === "sine_up" || v === "drelu_ste");
     if (!upfig.hidden) {
       var us = [{ f: function (b) { return G.up(v, b, p); }, color: "var(--s1)", label: "u(b)" }, { f: function (b) { return b; }, color: "var(--ref)", label: "u = b, every other gate", width: 1.5, fit: false }];
       var ku = document.getElementById("keys-up"); ku.replaceChildren(); us.forEach(function (s) { keyLine(ku, s.color, s.label, { thin: s.width === 1.5 }); });
@@ -788,7 +938,8 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     var sA = 3 * state.sigma, sG = state.v === "life_glu" ? 1 : sA, sH = 0;
     L.forEach(function (r) { sH = Math.max(sH, Math.abs(r.h)); });
     sH = Math.max(sH, 1e-6);
-    var rows = [["a", "a = W₁x", function (r) { return r.a / sA; }], ["g", "g(a)", function (r) { return r.g / sG; }], ["h", "h = g · u", function (r) { return r.h / sH; }]];
+    var hl = G.HV[state.v] ? "h, after step" : G.NONGATED[state.v] ? "h = g" : "h = g · u";
+    var rows = [["a", "a = W₁x", function (r) { return r.a / sA; }], ["g", "g(a)", function (r) { return r.g / sG; }], ["h", hl, function (r) { return r.h / sH; }]];
     var nb = state.hover >= 0 && G.usesNeighbours(state.v) ? neighbours(state.hover) : [];
     if (state.hover >= 0) {
       c.fillStyle = C["--chip"]; c.fillRect(x0 + state.hover * uw, STRIP.top - 4, uw, STRIP.rowH * 3 + 4);
@@ -841,7 +992,7 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     var s = sizeCanvas(ring), c = s.c, W = s.w, Hh = s.h, cx = W / 2, cy = Hh / 2, R = Math.min(W, Hh) / 2 - 22;
     c.clearRect(0, 0, W, Hh);
     if (state.v === "conway2d_swiglu") { drawGrid(c, W, Hh); return; }
-    var life2 = !!G.LIFE2[state.v];
+    var life2 = BITS(state.v);
     var gmax = 1e-6; L.forEach(function (r) { gmax = Math.max(gmax, Math.abs(r.g)); });
     c.strokeStyle = C["--grid"]; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, R, 0, 2 * Math.PI); c.stroke();
     var pos = function (i) { var t = -Math.PI / 2 + 2 * Math.PI * i / N; return [cx + R * Math.cos(t), cy + R * Math.sin(t)]; };
@@ -857,6 +1008,7 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
         if (r.r > 0.5) { c.strokeStyle = C["--s2"]; c.lineWidth = 2.5; c.beginPath(); c.arc(p[0], p[1], 8, 0, 2 * Math.PI); c.stroke(); }
         if (r.p) { c.fillStyle = C["--s1"]; c.beginPath(); c.arc(p[0], p[1], rad, 0, 2 * Math.PI); c.fill(); }
         else { c.strokeStyle = C["--muted"]; c.lineWidth = 1.5; c.beginPath(); c.arc(p[0], p[1], 3.5, 0, 2 * Math.PI); c.stroke(); }
+        if (r.strong) { c.strokeStyle = C["--ink"]; c.lineWidth = 2; c.beginPath(); c.arc(p[0], p[1], 11, 0, 2 * Math.PI); c.stroke(); }   /* conway_sparse */
       }
       else if (Math.abs(r.g) < 0.05) { c.strokeStyle = C["--muted"]; c.lineWidth = 1.5; c.beginPath(); c.arc(p[0], p[1], 3, 0, 2 * Math.PI); c.stroke(); }
       else { c.fillStyle = C["--s1"]; c.globalAlpha = 0.35 + 0.65 * mag; c.beginPath(); c.arc(p[0], p[1], rad, 0, 2 * Math.PI); c.fill(); c.globalAlpha = 1; }
@@ -866,7 +1018,7 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     c.fillText(state.hover >= 0 ? "unit " + state.hover : "hover a unit", cx, cy - 8);
     if (state.hover >= 0) {
       var r = L[state.hover];
-      if (life2) { c.fillText((r.p ? "alive" : "dead") + ", n = " + r.n + ", z = " + r.z, cx, cy + 10); c.fillText("rule " + (r.r > 0.5 ? "on" : "off") + ", m = " + r.m.toFixed(2), cx, cy + 28); }
+      if (life2) { c.fillText((r.p ? "alive" : "dead") + ", n = " + r.n + ", z = " + r.z, cx, cy + 10); c.fillText("rule " + (r.r > 0.5 ? "on" : "off") + ruleTail(state.v, r), cx, cy + 28); }
       else c.fillText("g = " + num(r.g, 3) + (r.n != null ? "   n = " + r.n.toFixed(2) : ""), cx, cy + 10);
     }
     c.textAlign = "start";
@@ -879,9 +1031,10 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     for (var k = 0; k < N / BLK; k++) { var all = true; for (var i = k * BLK; i < (k + 1) * BLK; i++) if (Math.abs(L[i].g) >= 0.05) { all = false; break; } if (all) blocks++; }
     counters.replaceChildren();
     var items = [["Exact zeros in h", z + " / " + N], ["|g| < 0.05", near + " / " + N], ["8-unit blocks off", blocks + " / " + N / BLK]];
-    if (G.LIFE2[state.v]) {
-      var alive = 0, on = 0; L.forEach(function (r) { alive += r.p; if (r.r > 0.5) on++; });
+    if (BITS(state.v)) {
+      var alive = 0, on = 0, strong = 0; L.forEach(function (r) { alive += r.p; if (r.r > 0.5) on++; if (r.strong) strong++; });
       items.push(["Alive", alive + " / " + N], ["Rule on", on + " / " + N]);
+      if (state.v === "conway_sparse") items.push(["Strong", strong + " / " + N]);
     }
     items.forEach(function (c) {
       var s = H("span", null, c[0] + " ", counters); H("b", null, c[1], s);
@@ -891,13 +1044,15 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     var det = document.getElementById("values"); if (!det.open) return;
     var box = document.getElementById("vt"); box.replaceChildren();
     var t = H("table", null, null, box), hr = H("tr", null, null, H("thead", null, null, t)), nbs = G.usesNeighbours(state.v);
-    var l2 = !!G.LIFE2[state.v];
-    ["unit", "a", "b", "g", "u", "h"].concat(l2 ? ["alive", "n", "z", "rule", "m"] : nbs ? ["n"] : []).forEach(function (h) { H("th", null, h, hr); });
+    var l2 = BITS(state.v), cs = state.v === "conway_sparse";
+    var hv = !!G.HV[state.v], ng = !!G.NONGATED[state.v];
+    ["unit", "a", "b", "g", "u", hv ? "h before" : "h"].concat(hv ? ["factor", "h"] : []).concat(l2 ? ["alive", "n", "z", "rule", cs ? "strong" : state.v === "conway_ffn" ? "passes" : state.v === "bilinear_lifelearn" ? "grad ×" : "m"] : nbs ? ["n"] : [])
+      .forEach(function (h) { H("th", null, h, hr); });
     var tb = H("tbody", null, null, t);
     L.forEach(function (r, i) {
       var tr = H("tr", null, null, tb);
-      [String(i), num(r.a, 3), num(r.b, 3), num(r.g, 3), num(r.u, 3), num(r.h, 3)]
-        .concat(l2 ? [String(r.p), String(r.n), String(r.z), r.r > 0.5 ? "on" : "off", r.m.toFixed(3)] : nbs ? [r.n.toFixed(2)] : [])
+      [String(i), num(r.a, 3), ng ? "–" : num(r.b, 3), num(r.g, 3), ng ? "–" : num(r.u, 3), num(hv ? r.hraw : r.h, 3)].concat(hv ? [r.f.toFixed(3), num(r.h, 3)] : [])
+        .concat(l2 ? [String(r.p), String(r.n), String(r.z), r.r > 0.5 ? "on" : "off", cs ? (r.strong ? "yes" : "no") : state.v === "conway_ffn" ? (r.r > 0.5 ? "yes" : "no") : r.m.toFixed(3)] : nbs ? [r.n.toFixed(2)] : [])
         .forEach(function (x) { H("td", null, x, tr); });
     });
   }
@@ -906,8 +1061,11 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
   var tipAt = [0, 0];
   function unitTip(i, cx, cy) {
     tipAt = [cx, cy];
-    var r = L[i], lines = [["h = " + num(r.h, 3), "unit " + i], ["", "a " + num(r.a, 3) + " · g " + num(r.g, 3)], ["", "b " + num(r.b, 3) + " · u " + num(r.u, 3)]];
-    if (G.LIFE2[state.v]) lines.push(["", (r.p ? "alive" : "dead") + " · " + r.n + " alive neighbours · z = " + r.z + " · rule " + (r.r > 0.5 ? "on" : "off") + " · m = " + r.m.toFixed(3)]);
+    var r = L[i], lines = [["h = " + num(r.h, 3), "unit " + i], ["", "a " + num(r.a, 3) + " · g " + num(r.g, 3)],
+                           ["", G.NONGATED[state.v] ? "no value branch: h = g" : "b " + num(r.b, 3) + " · u " + num(r.u, 3)]];
+    if (G.HV[state.v]) lines.push(["", "before the step " + num(r.hraw, 3) + " · factor " + r.f.toFixed(3) + " · token E " + r.E.toFixed(3)]);
+    if (BITS(state.v)) lines.push(["", (r.p ? "alive" : "dead") + " · " + r.n + " alive neighbours · z = " + r.z + " · rule " + (r.r > 0.5 ? "on" : "off") +
+      (state.v === "conway_sparse" ? " · " + (r.strong ? "strong, passes" : r.r > 0.5 ? "weak, kept by the rule" : "weak, pruned") : ruleTail(state.v, r).replace(", ", " · "))]);
     else if (r.n != null) lines.push(["", "neighbours n " + r.n.toFixed(2) + " · own p = σ(a) " + r.p.toFixed(2)]);
     showTip(lines, cx, cy);
   }
@@ -950,11 +1108,20 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
       window_glu: "window_glu is the control for lenia_glu: the same learned bell window, fed by the unit's own activity 8σ(a) instead of its neighbours. If lenia_glu only beats it because of the window, the two should tie; the study found lenia_glu ahead by 0.011.",
       conway_swiglu: "Round 3 keeps Conway's rule exact. Each unit is alive (a > θ) or dead, n counts its alive neighbours among the 8 nearest on the ring, and z = 2n + s puts both into one number: alive units have odd z, dead units even z. The trapezoid is 1 for z = 5, 6 and 7 and 0 everywhere else, which is B3/S23. The rule then decides how much of silu(a) passes.",
       lenia_swiglu: "The same exact rule, but each unit learns where the trapezoid's two edges sit, starting from Conway's 4 and 7. Training nudged them to 4.24 and 6.83, so the rule switches on slightly later and off slightly earlier.",
-      conway2d_swiglu: "The same exact rule on a 2-D board: units sit on a torus grid and count their 8 Moore neighbours, as cells do in Conway's Game of Life. Hover a cell to see its neighbourhood."
+      conway_sparse: "Round 4 uses the exact rule to prune instead of to scale. Every unit starts from c = max(silu(a), 0). Units whose c is large next to the token's RMS are strong and always pass. Every other unit passes only where Conway's rule is on for it, so most weak units become exact zeros.",
+      conway2d_swiglu: "The same exact rule on a 2-D board: units sit on a torus grid and count their 8 Moore neighbours, as cells do in Conway's Game of Life. Hover a cell to see its neighbourhood.",
+      conway_ffn: "Round 6 makes Conway's exact rule the layer's only nonlinearity. Each unit is alive when a > θ, z = 2n + s combines its state with its alive-neighbour count, and the trapezoid is 1 for z = 5, 6 and 7. A unit the rule keeps passes its own a, whatever its sign; every other unit outputs exactly 0.",
+      bilinear_lifelearn: "Round 6 also tries the rule on learning alone. The forward pass is plain bilinear. Each unit is alive when a > 0, and where Conway's rule says it lives its gradient is scaled by 1.2; everywhere else by 0.8. Nothing in the output shows the rule."
     };
     document.getElementById("life-text").textContent = texts[v];
-    var l2 = !!G.LIFE2[v];
-    document.getElementById("ring-cap").textContent = l2
+    var l2 = BITS(v);
+    document.getElementById("ring-cap").textContent = v === "conway_ffn"
+      ? "Filled: alive (a > θ). Orange outline: the rule is on, so the unit passes a. Every other unit outputs exactly 0."
+      : v === "bilinear_lifelearn"
+      ? "Filled: alive (a > 0). Orange outline: the rule is on, so this unit's gradient is scaled by 1.2; every other unit's by 0.8. The forward pass doesn't use the rule."
+      : v === "conway_sparse"
+      ? "Filled: alive (a > θ). Orange outline: the rule is on. Dark ring: strong, passes whatever the rule says. Weak units outside the rule are pruned to exactly 0."
+      : l2
       ? "Filled: alive (a > θ). Orange outline: the rule is on, so m = 1. Every other unit is damped to m = 1 − tanh(γ)" + (p.tg ? " = " + (1 - p.tg).toFixed(2) + "." : ", which is 1 at the start of training.")
       : "Dot size and shade show |g|; hollow dots have |g| < 0.05. Hover a unit to see its 8 neighbours.";
     var xname = l2 ? "z = 2n + s" : v === "window_glu" ? "8σ(a), the unit's own activity" : "n, summed σ(a) of the 8 neighbours";
@@ -999,13 +1166,13 @@ footer { font-size: 15px; color: var(--ink-2); display: grid; gap: 6px; border-t
     if (!LIFE[state.v] || !nbRug) return;
     var v = state.v, x = nbScale.x, y = nbScale.y; nbRug.replaceChildren();
     L.forEach(function (r, i) {
-      var val = G.LIFE2[v] ? r.z : v === "window_glu" ? 8 * r.p : r.n;
+      var val = BITS(v) ? r.z : v === "window_glu" ? 8 * r.p : r.n;
       S("line", { x1: x(val), x2: x(val), y1: y(-0.1), y2: y(-0.02), stroke: i === state.hover ? "var(--ink)" : "var(--muted)", "stroke-width": i === state.hover ? 2.5 : 1 }, nbRug);
     });
     var ro = document.getElementById("nb-readout");
     if (state.hover >= 0) {
       var r = L[state.hover];
-      ro.textContent = "unit " + state.hover + ": " + (G.LIFE2[v] ? (r.p ? "alive" : "dead") + ", n = " + r.n + ", z = " + r.z + ", rule " + (r.r > 0.5 ? "on" : "off") + ", m = " + r.m.toFixed(2)
+      ro.textContent = "unit " + state.hover + ": " + (BITS(v) ? (r.p ? "alive" : "dead") + ", n = " + r.n + ", z = " + r.z + ", rule " + (r.r > 0.5 ? "on" : "off") + ruleTail(v, r)
         : (v === "window_glu" ? "8σ(a) = " + (8 * r.p).toFixed(2) : "n = " + r.n.toFixed(2)) + ", g = " + num(r.g, 3));
     }
     else ro.textContent = "";
